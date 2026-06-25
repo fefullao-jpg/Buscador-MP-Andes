@@ -1,0 +1,7 @@
+{
+  "name": "buscador-mp",
+  "version": "1.0.0",
+  "description": "Buscador de Compra Ágil — Andes Medikeep",
+  "type": "module",
+  "engines": { "node": ">=18" }
+}

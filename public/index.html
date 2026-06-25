@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compra Ágil · Andes Medikeep</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/dist/tabler-icons.min.css" />
+  <style>
+    :root {
+      --navy: #1E3A6E; --navy-h: #16305c;
+      --teal: #2BBFAA; --teal-h: #22a898; --teal-bg: rgba(43,191,170,0.10);
+      --bg: #f4f6fb; --card: #fff; --side: #eef1f8;
+      --border: rgba(0,0,0,0.09); --border-md: rgba(0,0,0,0.15);
+      --text: #1a1a2e; --muted: #6b7280; --light: #9ca3af;
+      --r: 10px; --rs: 6px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.07);
+      --shadow-md: 0 4px 14px rgba(0,0,0,0.09);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+    /* ── HEADER ── */
+    .hdr {
+      background: var(--navy); height: 54px;
+      display: flex; align-items: center; gap: 12px; padding: 0 22px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    .hdr-logo { width: 30px; height: 30px; background: var(--teal); border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .hdr h1 { color: #fff; font-size: 15px; font-weight: 600; }
+    .hdr h1 span { color: var(--teal); }
+    .hdr-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .badge-ok  { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; background: rgba(43,191,170,0.22); color: var(--teal); }
+    .badge-nok { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.55); }
+    .btn-hdr { height: 32px; padding: 0 14px; border-radius: var(--rs); border: none; background: var(--teal); color: #fff; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .btn-hdr:hover { background: var(--teal-h); }
+
+    /* ── LAYOUT ── */
+    .layout { display: grid; grid-template-columns: 240px 1fr; height: calc(100vh - 54px); }
+
+    /* ── SIDEBAR ── */
+    .side { background: var(--side); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+    .side-top { padding: 14px 14px 0; flex-shrink: 0; }
+    .side-scroll { flex: 1; overflow-y: auto; padding: 0 14px 14px; }
+    .side-bot { padding: 10px 14px 14px; border-top: 1px solid var(--border); background: var(--side); flex-shrink: 0; }
+    .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; font-weight: 600; margin-bottom: 7px; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
+
+    /* Categorías */
+    .new-cat { display: flex; gap: 6px; margin-bottom: 10px; }
+    .new-cat input { flex: 1; height: 34px; border-radius: var(--rs); border: 1px solid var(--border-md); padding: 0 10px; font-size: 13px; background: var(--card); color: var(--text); min-width: 0; }
+    .new-cat input:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(43,191,170,.12); }
+    .btn-add-cat { height: 34px; width: 34px; border-radius: var(--rs); border: none; background: var(--navy); color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .btn-add-cat:hover { background: var(--navy-h); }
+    .cat-list { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+    .cat-item { display: flex; align-items: center; gap: 7px; padding: 7px 9px; border-radius: var(--rs); border: 1px solid transparent; background: var(--card); font-size: 13px; cursor: pointer; box-shadow: var(--shadow); transition: border-color .12s; }
+    .cat-item:hover { border-color: var(--teal); }
+    .cat-item.all { border-color: rgba(43,191,170,.35); }
+    .cat-item.all.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+    .cat-item.active { background: var(--navy); border-color: var(--navy); color: #fff; }
+    .cat-item span.name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cat-item .cnt { font-size: 10px; padding: 1px 6px; border-radius: 20px; background: rgba(0,0,0,.08); flex-shrink: 0; font-weight: 500; }
+    .cat-item.active .cnt, .cat-item.all.active .cnt { background: rgba(255,255,255,.25); color: #fff; }
+    .cat-item .del { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 15px; padding: 0; opacity: 0; flex-shrink: 0; }
+    .cat-item:hover .del { opacity: 1; }
+    .cat-item.active .del { color: rgba(255,255,255,.5); opacity: 1; }
+    .cat-item .del:hover { color: #ef4444 !important; }
+
+    /* Sub-panel */
+    .sub-panel { background: var(--card); border: 1px solid var(--border); border-radius: var(--rs); padding: 9px; margin-bottom: 8px; box-shadow: var(--shadow); }
+    .sub-hdr { font-size: 11px; color: var(--muted); margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .sub-hdr strong { color: var(--text); font-weight: 600; }
+    .sub-words { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+    .sub-word { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: var(--rs); border: 1px solid var(--border); font-size: 12px; background: var(--side); }
+    .sub-word span { flex: 1; }
+    .sub-word .del-sw { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 0; opacity: 0; }
+    .sub-word:hover .del-sw { opacity: 1; }
+    .sub-word .del-sw:hover { color: #ef4444; }
+    .sub-add { display: flex; gap: 5px; }
+    .sub-add input { flex: 1; height: 30px; border-radius: var(--rs); border: 1px solid var(--border-md); padding: 0 9px; font-size: 12px; background: var(--side); color: var(--text); min-width: 0; }
+    .sub-add input:focus { outline: none; border-color: var(--teal); }
+    .btn-add-sw { height: 30px; width: 30px; border-radius: var(--rs); border: none; background: var(--teal); color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .btn-add-sw:hover { background: var(--teal-h); }
+
+    /* API key */
+    .api-row { display: flex; gap: 5px; }
+    .api-row input { flex: 1; height: 30px; border-radius: var(--rs); border: 1px solid var(--border-md); padding: 0 9px; font-size: 11px; background: var(--card); color: var(--text); min-width: 0; }
+    .api-row input:focus { outline: none; border-color: var(--teal); }
+    .btn-ok { height: 30px; padding: 0 11px; border-radius: var(--rs); border: 1px solid var(--border-md); background: var(--card); color: var(--text); font-size: 11px; font-weight: 600; cursor: pointer; }
+    .btn-ok:hover { background: var(--side); }
+
+    /* ── MAIN ── */
+    .main { display: flex; flex-direction: column; overflow: hidden; }
+    .top-bar { padding: 12px 18px; background: var(--card); border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex-shrink: 0; }
+    .top-bar select { height: 34px; border-radius: var(--rs); border: 1px solid var(--border-md); padding: 0 10px; font-size: 13px; background: var(--card); color: var(--text); cursor: pointer; }
+    .btn-buscar { height: 34px; padding: 0 16px; border-radius: var(--rs); border: none; background: var(--navy); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 7px; margin-left: auto; }
+    .btn-buscar:hover { background: var(--navy-h); }
+    .scope-bar { padding: 8px 18px; font-size: 12px; color: var(--muted); background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 7px; flex-wrap: wrap; flex-shrink: 0; }
+    .chip { display: inline-flex; align-items: center; border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 600; }
+    .chip-all { background: var(--teal); color: #fff; }
+    .chip-cat { background: var(--navy); color: #fff; }
+    .scroll { flex: 1; overflow-y: auto; padding: 16px 18px; }
+
+    /* Cards */
+    .results-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .results-count { font-size: 12px; color: var(--muted); }
+    .sort-lbl { font-size: 11px; color: var(--light); margin-left: auto; }
+    .card { border: 1px solid var(--border); border-radius: var(--r); padding: 13px 15px; margin-bottom: 8px; background: var(--card); box-shadow: var(--shadow); transition: border-color .12s, box-shadow .12s; }
+    .card:hover { border-color: var(--teal); box-shadow: var(--shadow-md); }
+    .card-top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+    .card-title { font-size: 13px; font-weight: 500; flex: 1; line-height: 1.45; }
+    .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+    .badge-pub  { background: #dcfce7; color: #166534; }
+    .badge-cerr { background: #f1f5f9; color: #475569; }
+    .badge-des  { background: #fef9c3; color: #854d0e; }
+    .badge-canc { background: #fee2e2; color: #991b1b; }
+    .badge-sel  { background: #eff6ff; color: #1d4ed8; }
+    .card-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .field .flbl { font-size: 10px; color: var(--muted); margin-bottom: 3px; text-transform: uppercase; letter-spacing: .04em; }
+    .field .fval { font-size: 12px; font-weight: 500; }
+    .fval.monto { color: var(--navy); font-size: 13px; font-weight: 600; }
+    .fval.urgente { color: #dc2626; }
+    .fval.pronto  { color: #d97706; }
+    .card-foot { display: flex; align-items: center; justify-content: space-between; padding-top: 9px; border-top: 1px solid var(--border); gap: 8px; }
+    .pills { display: flex; gap: 5px; flex-wrap: wrap; }
+    .pill-cat { font-size: 11px; background: rgba(30,58,110,.08); color: var(--navy); border-radius: 20px; padding: 2px 9px; font-weight: 500; }
+    .pill-kw  { font-size: 11px; background: var(--teal-bg); color: #065f52; border-radius: 20px; padding: 2px 9px; }
+    .pill-cod { font-size: 11px; background: #f1f5f9; color: #475569; border-radius: 20px; padding: 2px 9px; font-family: monospace; }
+    .link-ver { font-size: 12px; color: var(--teal); text-decoration: none; display: inline-flex; align-items: center; gap: 3px; font-weight: 500; white-space: nowrap; }
+    .link-ver:hover { text-decoration: underline; }
+
+    /* Estados vacíos / carga */
+    .empty { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 13px; }
+    .empty i { font-size: 36px; color: var(--teal); display: block; margin-bottom: 12px; }
+    .spinner { text-align: center; padding: 50px; color: var(--muted); font-size: 13px; }
+    .spinner i { font-size: 28px; display: block; margin-bottom: 10px; animation: spin .8s linear infinite; }
+    @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    .progress-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; text-align: center; font-size: 13px; color: var(--muted); }
+    .prog-track { height: 5px; background: var(--border); border-radius: 3px; margin: 12px 0 6px; overflow: hidden; }
+    .prog-fill  { height: 5px; background: var(--teal); border-radius: 3px; transition: width .3s; }
+    .err-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--rs); padding: 10px 14px; font-size: 12px; color: #991b1b; margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
+
+    @media (max-width: 680px) {
+      .layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .side { max-height: 260px; border-right: none; border-bottom: 1px solid var(--border); }
+      .card-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-logo"><i class="ti ti-building-hospital" style="color:#fff;font-size:17px;"></i></div>
+  <h1>Compra Ágil · <span>Buscador</span></h1>
+  <div class="hdr-right">
+    <span id="api-badge" class="badge-nok">Cargando...</span>
+    <button class="btn-hdr" onclick="buscarTodo()"><i class="ti ti-refresh"></i> Actualizar</button>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="side">
+    <div class="side-top">
+      <div class="lbl">Categorías</div>
+      <div class="new-cat">
+        <input id="cat-inp" type="text" placeholder="Nueva categoría..." onkeydown="if(event.key==='Enter')addCat()" />
+        <button class="btn-add-cat" onclick="addCat()" aria-label="Agregar">+</button>
+      </div>
+      <hr class="divider" />
+    </div>
+    <div class="side-scroll">
+      <div class="cat-list" id="cat-list"></div>
+      <div id="sub-area"></div>
+    </div>
+    <div class="side-bot">
+      <div class="lbl">API key ChileCompra</div>
+      <div class="api-row">
+        <input type="password" id="api-inp" placeholder="Tu ticket" />
+        <button class="btn-ok" onclick="saveKey()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="top-bar">
+      <select id="estado-sel" onchange="renderVisible()">
+        <option value="publicada">Publicadas</option>
+        <option value="cerrada">Cerradas</option>
+        <option value="proveedor_seleccionado">Proveedor seleccionado</option>
+        <option value="">Todos los estados</option>
+      </select>
+      <select id="region-sel" onchange="buscarTodo()">
+        <option value="">Todas las regiones</option>
+        <option value="13">R.M. (Santiago)</option>
+        <option value="5">Valparaíso</option>
+        <option value="8">Biobío</option>
+        <option value="9">Araucanía</option>
+        <option value="7">Maule</option>
+        <option value="6">O'Higgins</option>
+        <option value="4">Coquimbo</option>
+        <option value="10">Los Lagos</option>
+        <option value="3">Atacama</option>
+        <option value="2">Antofagasta</option>
+        <option value="1">Tarapacá</option>
+        <option value="11">Aysén</option>
+        <option value="12">Magallanes</option>
+        <option value="14">Los Ríos</option>
+        <option value="15">Arica y Parinacota</option>
+        <option value="16">Ñuble</option>
+      </select>
+      <button class="btn-buscar" onclick="buscarTodo()"><i class="ti ti-search"></i> Buscar todo</button>
+    </div>
+    <div class="scope-bar" id="scope-bar">
+      <i class="ti ti-loader" style="font-size:14px;flex-shrink:0"></i>
+      Iniciando búsqueda automática...
+    </div>
+    <div class="scroll">
+      <div class="spinner" id="main-area"><i class="ti ti-refresh"></i>Buscando en todas las categorías...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STORAGE ──────────────────────────────────────────────────────────────────
+const CAT_KEY  = 'mp_ca_cats_v1';
+const KEY_KEY  = 'mp_ca_key_v1';
+const DEF_KEY  = '38366B56-462A-4B4F-9FEE-18F946D9F1B5';
+
+let cats       = [];
+let apiKey     = DEF_KEY;
+let activeCat  = null;  // null = todas
+let allResults = [];    // todos los resultados cargados
+
+function loadStorage() {
+  try { const s = localStorage.getItem(CAT_KEY); if(s) cats = JSON.parse(s); } catch(e){}
+  try { const s = localStorage.getItem(KEY_KEY);  if(s) apiKey = s; } catch(e){}
+  if(!cats.length) seedCats();
+  document.getElementById('api-inp').value = apiKey;
+  updateBadge();
+}
+function saveStorage() { try { localStorage.setItem(CAT_KEY, JSON.stringify(cats)); } catch(e){} }
+function saveKey() {
+  apiKey = document.getElementById('api-inp').value.trim() || DEF_KEY;
+  try { localStorage.setItem(KEY_KEY, apiKey); } catch(e){}
+  updateBadge();
+}
+function updateBadge() {
+  const b = document.getElementById('api-badge');
+  b.textContent = apiKey ? 'API conectada' : 'Sin API key';
+  b.className   = apiKey ? 'badge-ok' : 'badge-nok';
+}
+function seedCats() {
+  cats = [
+    { name:'Catéter JJ',      words:['cateter jj','pigtail','doble j','ureteral stent'] },
+    { name:'Guía hidrofílica', words:['guia hidrofílica','guia nitinol','hydrophilic guidewire'] },
+    { name:'Electrodo TURP',   words:['electrodo turp','asa bipolar','storz bipolar'] },
+  ];
+}
+
+// ── CATEGORÍAS ───────────────────────────────────────────────────────────────
+function addCat() {
+  const inp = document.getElementById('cat-inp');
+  const val = inp.value.trim();
+  if(!val || cats.find(c=>c.name.toLowerCase()===val.toLowerCase())) { inp.value=''; return; }
+  cats.push({ name: val, words: [] });
+  inp.value=''; saveStorage(); renderCatList();
+}
+function delCat(idx, e) {
+  e.stopPropagation();
+  cats.splice(idx,1);
+  if(activeCat===idx) activeCat=null;
+  else if(activeCat>idx) activeCat--;
+  saveStorage(); renderAll(); updateScope(); renderVisible();
+}
+function selCat(idx) {
+  activeCat = (activeCat===idx) ? null : idx;
+  renderAll(); updateScope(); renderVisible();
+}
+function selAll() { activeCat=null; renderAll(); updateScope(); renderVisible(); }
+
+function addSub() {
+  if(activeCat===null) return;
+  const inp = document.getElementById('sub-inp');
+  const val = inp.value.trim();
+  if(!val || cats[activeCat].words.includes(val)) { inp.value=''; return; }
+  cats[activeCat].words.push(val); inp.value='';
+  saveStorage(); renderSubArea(); renderCatList();
+}
+function delSub(word, e) {
+  e.stopPropagation();
+  if(activeCat===null) return;
+  cats[activeCat].words = cats[activeCat].words.filter(w=>w!==word);
+  saveStorage(); renderSubArea(); renderCatList();
+}
+
+function cntForCat(idx) {
+  if(!allResults.length) return null;
+  const ws = cats[idx]?.words||[];
+  return allResults.filter(r=>ws.includes(r._kw)).length;
+}
+
+function renderAll() { renderCatList(); renderSubArea(); }
+
+function renderCatList() {
+  const el = document.getElementById('cat-list');
+  const total = allResults.length;
+  const allA  = activeCat===null;
+  let html = `<div class="cat-item all${allA?' active':''}" onclick="selAll()">
+    <i class="ti ti-layout-grid" style="font-size:15px;flex-shrink:0"></i>
+    <span class="name">Todas las categorías</span>
+    ${total?`<span class="cnt">${total}</span>`:''}
+  </div>`;
+  if(!cats.length) { html+='<div style="font-size:12px;color:var(--muted);padding:8px 2px;text-align:center">Sin categorías</div>'; }
+  else html += cats.map((c,i)=>{
+    const a = activeCat===i;
+    const cnt = cntForCat(i);
+    return `<div class="cat-item${a?' active':''}" onclick="selCat(${i})">
+      <i class="ti ti-folder" style="font-size:15px;flex-shrink:0"></i>
+      <span class="name" title="${c.name}">${c.name}</span>
+      ${cnt!==null?`<span class="cnt">${cnt}</span>`:''}
+      <button class="del" onclick="delCat(${i},event)">×</button>
+    </div>`;
+  }).join('');
+  el.innerHTML = html;
+}
+
+function renderSubArea() {
+  const el = document.getElementById('sub-area');
+  if(activeCat===null) { el.innerHTML=''; return; }
+  const cat = cats[activeCat];
+  const ws = cat.words.length
+    ? cat.words.map(w=>`<div class="sub-word">
+        <i class="ti ti-tag" style="font-size:12px;flex-shrink:0;color:var(--muted)"></i>
+        <span>${w}</span>
+        <button class="del-sw" onclick="delSub('${w.replace(/'/g,"\\'")}',event)">×</button>
+      </div>`).join('')
+    : '<div style="font-size:12px;color:var(--muted);padding:3px 2px">Sin palabras aún</div>';
+  el.innerHTML = `<div class="sub-panel">
+    <div class="sub-hdr">
+      <span>Palabras en <strong>${cat.name}</strong></span>
+      <span>${cat.words.length} palbra${cat.words.length!==1?'s':''}</span>
+    </div>
+    <div class="sub-words">${ws}</div>
+    <div class="sub-add">
+      <input type="text" id="sub-inp" placeholder="agregar palabra..." onkeydown="if(event.key==='Enter')addSub()" />
+      <button class="btn-add-sw" onclick="addSub()" aria-label="Agregar">+</button>
+    </div>
+  </div>`;
+}
+
+// ── SCOPE BAR ─────────────────────────────────────────────────────────────────
+function updateScope() {
+  const bar = document.getElementById('scope-bar');
+  if(activeCat===null) {
+    bar.innerHTML = `<i class="ti ti-layout-grid" style="font-size:14px;flex-shrink:0"></i>
+      <span class="chip chip-all">Todas las categorías</span> · mayor monto primero`;
+  } else {
+    const c = cats[activeCat];
+    const ws = c.words.map(w=>`<em>${w}</em>`).join(', ')||'sin palabras';
+    bar.innerHTML = `<i class="ti ti-folder" style="font-size:14px;flex-shrink:0"></i>
+      <span class="chip chip-cat">${c.name}</span> · ${ws}`;
+  }
+}
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function fmtFecha(str) {
+  if(!str) return { text:'—', cls:'' };
+  const d=new Date(str), now=new Date();
+  const h=(d-now)/3600000;
+  const f=d.toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'});
+  const t=d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+  return { text:`${f} · ${t}`, cls: h<0?'':h<24?'urgente':h<72?'pronto':'' };
+}
+function fmtMonto(m) { return(!m||m===0)?'—':'$'+Number(m).toLocaleString('es-CL'); }
+function badgeEstado(e) {
+  const map = {
+    publicada:             ['badge-pub', 'Publicada'],
+    cerrada:               ['badge-cerr','Cerrada'],
+    desierta:              ['badge-des', 'Desierta'],
+    cancelada:             ['badge-canc','Cancelada'],
+    proveedor_seleccionado:['badge-sel', 'Adjudicada'],
+    oc_emitida:            ['badge-sel', 'OC emitida'],
+  };
+  const [cls, lbl] = map[e]||['badge-cerr', e||'—'];
+  return `<span class="badge ${cls}">${lbl}</span>`;
+}
+function catFor(kw) { const c=cats.find(c=>c.words.includes(kw)); return c?c.name:kw; }
+
+function renderCard(item) {
+  const estado = item.estado?.codigo||'';
+  const nombre = item.nombre||'Sin título';
+  const org    = item.institucion?.organismo_comprador||'—';
+  const monto  = fmtMonto(item.montos?.monto_disponible_clp);
+  const fecha  = fmtFecha(item.fechas?.fecha_cierre);
+  const codigo = item.codigo||'—';
+  const url    = `https://compra-agil.mercadopublico.cl/resumen-cotizacion/${encodeURIComponent(codigo)}`;
+  const catN   = catFor(item._kw);
+  return `<div class="card">
+    <div class="card-top">
+      <div class="card-title">${nombre}</div>
+      ${badgeEstado(estado)}
+    </div>
+    <div class="card-grid">
+      <div class="field"><div class="flbl">Organismo</div><div class="fval">${org}</div></div>
+      <div class="field"><div class="flbl">Monto estimado</div><div class="fval monto">${monto}</div></div>
+      <div class="field"><div class="flbl">Cierre</div><div class="fval ${fecha.cls}">${fecha.text}</div></div>
+    </div>
+    <div class="card-foot">
+      <div class="pills">
+        <span class="pill-cat">${catN}</span>
+        <span class="pill-kw">kw: ${item._kw}</span>
+        <span class="pill-cod">${codigo}</span>
+      </div>
+      <a class="link-ver" href="${url}" target="_blank" rel="noopener">
+        <i class="ti ti-external-link" style="font-size:13px"></i> Ver
+      </a>
+    </div>
+  </div>`;
+}
+
+function renderVisible() {
+  const el = document.getElementById('main-area');
+  let vis = allResults;
+  if(activeCat!==null) {
+    const ws = cats[activeCat]?.words||[];
+    vis = allResults.filter(r=>ws.includes(r._kw));
+  }
+  updateScope(); renderCatList();
+  if(!vis.length) {
+    el.innerHTML='<div class="empty"><i class="ti ti-search-off"></i>Sin resultados para esta categoría</div>';
+    return;
+  }
+  el.innerHTML =
+    `<div class="results-meta">
+      <span class="results-count">${vis.length} resultado${vis.length!==1?'s':''}</span>
+      <span class="sort-lbl"><i class="ti ti-arrow-down" style="font-size:11px"></i> Mayor monto primero</span>
+    </div>` +
+    vis.map(renderCard).join('');
+}
+
+// ── BÚSQUEDA ─────────────────────────────────────────────────────────────────
+async function buscarTodo() {
+  const el     = document.getElementById('main-area');
+  const estado = document.getElementById('estado-sel').value;
+  const region = document.getElementById('region-sel').value;
+  const allWords = cats.flatMap(c=>c.words);
+
+  if(!allWords.length) {
+    el.innerHTML='<div class="empty"><i class="ti ti-folder-search"></i>Agrega categorías con palabras clave para comenzar</div>';
+    return;
+  }
+
+  let done=0, fetched=[], errors=[];
+
+  el.innerHTML=`<div class="progress-wrap">
+    <div>Buscando <strong id="p-kw">…</strong> · palabra <strong id="p-cur">1</strong> de <strong>${allWords.length}</strong></div>
+    <div class="prog-track"><div class="prog-fill" id="p-fill" style="width:0%"></div></div>
+  </div>`;
+
+  for(const kw of allWords) {
+    const pk=document.getElementById('p-kw'); if(pk) pk.textContent=`"${kw}"`;
+    try {
+      const qs = new URLSearchParams({ q: kw, estado, tamano:'50' });
+      if(region) qs.set('region', region);
+      const res  = await fetch(`/api/buscar?${qs.toString()}`);
+      const data = await res.json();
+      if(data?.payload?.items) {
+        data.payload.items.forEach(item=>{
+          if(!fetched.find(r=>r.codigo===item.codigo)) {
+            item._kw = kw; fetched.push(item);
+          }
+        });
+      } else if(data?.error) {
+        errors.push(`${kw}: ${data.error}`);
+      }
+    } catch(e){ errors.push(`${kw}: ${e.message}`); }
+    done++;
+    const pf=document.getElementById('p-fill'), pc=document.getElementById('p-cur');
+    if(pf) pf.style.width=Math.round((done/allWords.length)*100)+'%';
+    if(pc) pc.textContent=Math.min(done+1,allWords.length);
+  }
+
+  // Ordenar por monto descendente
+  allResults = fetched.sort((a,b)=>
+    (b.montos?.monto_disponible_clp||0)-(a.montos?.monto_disponible_clp||0)
+  );
+
+  activeCat=null;
+  renderAll(); updateScope();
+
+  if(errors.length && !allResults.length) {
+    el.innerHTML=`<div class="err-box"><i class="ti ti-alert-circle" style="font-size:14px"></i>
+      Error al consultar la API: ${errors[0]}<br>
+      <small>Verifica que tu API key esté activa en <a href="https://api.mercadopublico.cl" target="_blank">api.mercadopublico.cl</a></small>
+    </div>`;
+    return;
+  }
+
+  renderVisible();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+loadStorage();
+renderAll();
+updateScope();
+buscarTodo();
+</script>
+</body>
+</html>
