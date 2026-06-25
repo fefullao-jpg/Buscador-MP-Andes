@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   }
 
   const params = new URLSearchParams({
-    q,
+    q: q.includes('"') ? q : `"${q}"`,
     estado,
     numero_pagina: pagina,
     tamano_pagina: tamano,
