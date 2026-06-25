@@ -472,7 +472,7 @@ async function buscarTodo() {
         data.payload.items.forEach(item=>{
         const titulo = (item.nombre||'').toLowerCase();
 const kwLower = kw.toLowerCase();
-if(!fetched.find(r=>r.codigo===item.codigo) && titulo.includes(kwLower)) {
+if(!fetched.find(r=>r.codigo===item.codigo) && kwLower.split(' ').every(word => titulo.includes(word))) {
             item._kw = kw; fetched.push(item);
           }
         });
