@@ -470,7 +470,9 @@ async function buscarTodo() {
       const data = await res.json();
       if(data?.payload?.items) {
         data.payload.items.forEach(item=>{
-          if(!fetched.find(r=>r.codigo===item.codigo)) {
+        const titulo = (item.nombre||'').toLowerCase();
+const kwLower = kw.toLowerCase();
+if(!fetched.find(r=>r.codigo===item.codigo) && titulo.includes(kwLower)) {
             item._kw = kw; fetched.push(item);
           }
         });
