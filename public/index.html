@@ -468,7 +468,8 @@ async function buscarTodo() {
       if(region) qs.set('region', region);
       const res  = await fetch(`/api/buscar?${qs.toString()}`);
       const data = await res.json();
-      if(data?.payload?.items) {
+      console.log('API response:', JSON.stringify(data).slice(0,500));
+if(data?.payload?.items) {
         data.payload.items.forEach(item=>{
         const titulo = (item.nombre||'').toLowerCase();
 const kwLower = kw.toLowerCase();
