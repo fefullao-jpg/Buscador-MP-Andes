@@ -531,7 +531,7 @@ if(!fetched.find(r=>r.codigo===item.codigo) && kwLower.split(' ').every(word => 
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-loadStorage();
+loadStorage().then(() => {  });
 renderAll();
 updateScope();
 buscarTodo();
