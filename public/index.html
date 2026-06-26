@@ -198,8 +198,9 @@
 </div>
 
 <script>
-const KEY_KEY = 'mp_ca_key_v1';
-const DEF_KEY = '38366B56-462A-4B4F-9FEE-18F946D9F1B5';
+const KEY_KEY    = 'mp_ca_key_v1';
+const BACKUP_KEY = 'mp_cats_backup';
+const DEF_KEY    = '38366B56-462A-4B4F-9FEE-18F946D9F1B5';
 
 let cats       = [];
 let apiKey     = DEF_KEY;
@@ -210,9 +211,19 @@ async function loadStorage() {
   try {
     const res  = await fetch('/api/categorias');
     const data = await res.json();
-    if (data.cats && data.cats.length) cats = data.cats;
+    if (data.cats && data.cats.length) {
+      cats = data.cats;
+      try { localStorage.setItem(BACKUP_KEY, JSON.stringify(cats)); } catch(e) {}
+    } else {
+      const backup = localStorage.getItem(BACKUP_KEY);
+      if (backup) cats = JSON.parse(backup);
+      else seedCats();
+    }
+  } catch(e) {
+    const backup = localStorage.getItem(BACKUP_KEY);
+    if (backup) cats = JSON.parse(backup);
     else seedCats();
-  } catch(e) { seedCats(); }
+  }
   try { const s = localStorage.getItem(KEY_KEY); if(s) apiKey = s; } catch(e) {}
   document.getElementById('api-inp').value = apiKey;
   updateBadge();
@@ -225,6 +236,7 @@ async function saveStorage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cats })
     });
+    try { localStorage.setItem(BACKUP_KEY, JSON.stringify(cats)); } catch(e) {}
   } catch(e) {}
   try { localStorage.setItem(KEY_KEY, apiKey); } catch(e) {}
 }
