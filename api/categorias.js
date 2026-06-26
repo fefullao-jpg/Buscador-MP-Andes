@@ -1,12 +1,10 @@
 // api/categorias.js — Guarda y lee categorías desde Upstash Redis
-// Las categorías son compartidas: todos los usuarios ven lo mismo
-
 const KV_URL   = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 const KEY      = 'mp_categorias';
 
 async function kvGet() {
-  const res = await fetch(`${KV_URL}/get/${KEY}`, {
+  const res  = await fetch(`${KV_URL}/get/${KEY}`, {
     headers: { Authorization: `Bearer ${KV_TOKEN}` },
   });
   const data = await res.json();
@@ -14,10 +12,11 @@ async function kvGet() {
 }
 
 async function kvSet(value) {
-  await fetch(`${KV_URL}/set/${KEY}`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${KV_TOKEN}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ value: JSON.stringify(value) }),
+  // Upstash REST API: SET key value via URL path
+  const encoded = encodeURIComponent(JSON.stringify(value));
+  await fetch(`${KV_URL}/set/${KEY}/${encoded}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${KV_TOKEN}` },
   });
 }
 
