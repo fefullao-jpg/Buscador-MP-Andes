@@ -19,14 +19,7 @@
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
-
-    /* ── HEADER ── */
-    .hdr {
-      background: var(--navy); height: 54px;
-      display: flex; align-items: center; gap: 12px; padding: 0 22px;
-      position: sticky; top: 0; z-index: 100;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-    }
+    .hdr { background: var(--navy); height: 54px; display: flex; align-items: center; gap: 12px; padding: 0 22px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.18); }
     .hdr-logo { width: 30px; height: 30px; background: var(--teal); border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .hdr h1 { color: #fff; font-size: 15px; font-weight: 600; }
     .hdr h1 span { color: var(--teal); }
@@ -35,19 +28,13 @@
     .badge-nok { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.55); }
     .btn-hdr { height: 32px; padding: 0 14px; border-radius: var(--rs); border: none; background: var(--teal); color: #fff; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; }
     .btn-hdr:hover { background: var(--teal-h); }
-
-    /* ── LAYOUT ── */
     .layout { display: grid; grid-template-columns: 240px 1fr; height: calc(100vh - 54px); }
-
-    /* ── SIDEBAR ── */
     .side { background: var(--side); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
     .side-top { padding: 14px 14px 0; flex-shrink: 0; }
     .side-scroll { flex: 1; overflow-y: auto; padding: 0 14px 14px; }
     .side-bot { padding: 10px 14px 14px; border-top: 1px solid var(--border); background: var(--side); flex-shrink: 0; }
     .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; font-weight: 600; margin-bottom: 7px; }
     .divider { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
-
-    /* Categorías */
     .new-cat { display: flex; gap: 6px; margin-bottom: 10px; }
     .new-cat input { flex: 1; height: 34px; border-radius: var(--rs); border: 1px solid var(--border-md); padding: 0 10px; font-size: 13px; background: var(--card); color: var(--text); min-width: 0; }
     .new-cat input:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(43,191,170,.12); }
@@ -66,8 +53,6 @@
     .cat-item:hover .del { opacity: 1; }
     .cat-item.active .del { color: rgba(255,255,255,.5); opacity: 1; }
     .cat-item .del:hover { color: #ef4444 !important; }
-
-    /* Sub-panel */
     .sub-panel { background: var(--card); border: 1px solid var(--border); border-radius: var(--rs); padding: 9px; margin-bottom: 8px; box-shadow: var(--shadow); }
     .sub-hdr { font-size: 11px; color: var(--muted); margin-bottom: 8px; display: flex; justify-content: space-between; }
     .sub-hdr strong { color: var(--text); font-weight: 600; }
@@ -82,15 +67,11 @@
     .sub-add input:focus { outline: none; border-color: var(--teal); }
     .btn-add-sw { height: 30px; width: 30px; border-radius: var(--rs); border: none; background: var(--teal); color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .btn-add-sw:hover { background: var(--teal-h); }
-
-    /* API key */
     .api-row { display: flex; gap: 5px; }
     .api-row input { flex: 1; height: 30px; border-radius: var(--rs); border: 1px solid var(--border-md); padding: 0 9px; font-size: 11px; background: var(--card); color: var(--text); min-width: 0; }
     .api-row input:focus { outline: none; border-color: var(--teal); }
     .btn-ok { height: 30px; padding: 0 11px; border-radius: var(--rs); border: 1px solid var(--border-md); background: var(--card); color: var(--text); font-size: 11px; font-weight: 600; cursor: pointer; }
     .btn-ok:hover { background: var(--side); }
-
-    /* ── MAIN ── */
     .main { display: flex; flex-direction: column; overflow: hidden; }
     .top-bar { padding: 12px 18px; background: var(--card); border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex-shrink: 0; }
     .top-bar select { height: 34px; border-radius: var(--rs); border: 1px solid var(--border-md); padding: 0 10px; font-size: 13px; background: var(--card); color: var(--text); cursor: pointer; }
@@ -101,8 +82,6 @@
     .chip-all { background: var(--teal); color: #fff; }
     .chip-cat { background: var(--navy); color: #fff; }
     .scroll { flex: 1; overflow-y: auto; padding: 16px 18px; }
-
-    /* Cards */
     .results-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .results-count { font-size: 12px; color: var(--muted); }
     .sort-lbl { font-size: 11px; color: var(--light); margin-left: auto; }
@@ -129,8 +108,6 @@
     .pill-cod { font-size: 11px; background: #f1f5f9; color: #475569; border-radius: 20px; padding: 2px 9px; font-family: monospace; }
     .link-ver { font-size: 12px; color: var(--teal); text-decoration: none; display: inline-flex; align-items: center; gap: 3px; font-weight: 500; white-space: nowrap; }
     .link-ver:hover { text-decoration: underline; }
-
-    /* Estados vacíos / carga */
     .empty { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 13px; }
     .empty i { font-size: 36px; color: var(--teal); display: block; margin-bottom: 12px; }
     .spinner { text-align: center; padding: 50px; color: var(--muted); font-size: 13px; }
@@ -140,7 +117,6 @@
     .prog-track { height: 5px; background: var(--border); border-radius: 3px; margin: 12px 0 6px; overflow: hidden; }
     .prog-fill  { height: 5px; background: var(--teal); border-radius: 3px; transition: width .3s; }
     .err-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--rs); padding: 10px 14px; font-size: 12px; color: #991b1b; margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
-
     @media (max-width: 680px) {
       .layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
       .side { max-height: 260px; border-right: none; border-bottom: 1px solid var(--border); }
@@ -160,8 +136,6 @@
 </div>
 
 <div class="layout">
-
-  <!-- SIDEBAR -->
   <div class="side">
     <div class="side-top">
       <div class="lbl">Categorías</div>
@@ -184,7 +158,6 @@
     </div>
   </div>
 
-  <!-- MAIN -->
   <div class="main">
     <div class="top-bar">
       <select id="estado-sel" onchange="renderVisible()">
@@ -219,140 +192,144 @@
       Iniciando búsqueda automática...
     </div>
     <div class="scroll">
-      <div class="spinner" id="main-area"><i class="ti ti-refresh"></i>Buscando en todas las categorías...</div>
+      <div id="main-area" class="spinner"><i class="ti ti-refresh"></i>Buscando en todas las categorías...</div>
     </div>
   </div>
 </div>
 
 <script>
-// ── STORAGE ──────────────────────────────────────────────────────────────────
-const CAT_KEY  = 'mp_ca_cats_v1';
-const KEY_KEY  = 'mp_ca_key_v1';
-const DEF_KEY  = '38366B56-462A-4B4F-9FEE-18F946D9F1B5';
+const KEY_KEY = 'mp_ca_key_v1';
+const DEF_KEY = '38366B56-462A-4B4F-9FEE-18F946D9F1B5';
 
 let cats       = [];
 let apiKey     = DEF_KEY;
-let activeCat  = null;  // null = todas
-let allResults = [];    // todos los resultados cargados
+let activeCat  = null;
+let allResults = [];
 
 async function loadStorage() {
   try {
-    const res = await fetch('/api/categorias');
+    const res  = await fetch('/api/categorias');
     const data = await res.json();
-    if(data.cats && data.cats.length) cats = data.cats;
+    if (data.cats && data.cats.length) cats = data.cats;
     else seedCats();
   } catch(e) { seedCats(); }
-  try { const s = localStorage.getItem(KEY_KEY); if(s) apiKey = s; } catch(e){}
+  try { const s = localStorage.getItem(KEY_KEY); if(s) apiKey = s; } catch(e) {}
   document.getElementById('api-inp').value = apiKey;
   updateBadge();
 }
 
 async function saveStorage() {
-  try { await fetch('/api/categorias', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ cats })
-  }); } catch(e){}
-  try { localStorage.setItem(KEY_KEY, apiKey); } catch(e){}
+  try {
+    await fetch('/api/categorias', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cats })
+    });
+  } catch(e) {}
+  try { localStorage.setItem(KEY_KEY, apiKey); } catch(e) {}
 }
-  try { const s = localStorage.getItem(CAT_KEY); if(s) cats = JSON.parse(s); } catch(e){}
-  try { const s = localStorage.getItem(KEY_KEY);  if(s) apiKey = s; } catch(e){}
-  if(!cats.length) seedCats();
-  document.getElementById('api-inp').value = apiKey;
-  updateBadge();
-}
-function saveStorage() { try { localStorage.setItem(CAT_KEY, JSON.stringify(cats)); } catch(e){} }
+
 function saveKey() {
   apiKey = document.getElementById('api-inp').value.trim() || DEF_KEY;
-  try { localStorage.setItem(KEY_KEY, apiKey); } catch(e){}
+  try { localStorage.setItem(KEY_KEY, apiKey); } catch(e) {}
   updateBadge();
 }
+
 function updateBadge() {
   const b = document.getElementById('api-badge');
   b.textContent = apiKey ? 'API conectada' : 'Sin API key';
   b.className   = apiKey ? 'badge-ok' : 'badge-nok';
 }
+
 function seedCats() {
   cats = [
-    { name:'Catéter JJ',      words:['cateter jj','pigtail','doble j','ureteral stent'] },
-    { name:'Guía hidrofílica', words:['guia hidrofílica','guia nitinol','hydrophilic guidewire'] },
-    { name:'Electrodo TURP',   words:['electrodo turp','asa bipolar','storz bipolar'] },
+    { name:'Catéter JJ',       words:['cateter jj','pigtail','doble j','ureteral stent'] },
+    { name:'Guía hidrofílica',  words:['guia hidrofílica','guia nitinol','hydrophilic guidewire'] },
+    { name:'Electrodo TURP',    words:['electrodo turp','asa bipolar','storz bipolar'] },
   ];
 }
 
-// ── CATEGORÍAS ───────────────────────────────────────────────────────────────
 function addCat() {
   const inp = document.getElementById('cat-inp');
   const val = inp.value.trim();
-  if(!val || cats.find(c=>c.name.toLowerCase()===val.toLowerCase())) { inp.value=''; return; }
+  if (!val || cats.find(c => c.name.toLowerCase() === val.toLowerCase())) { inp.value = ''; return; }
   cats.push({ name: val, words: [] });
-  inp.value=''; saveStorage(); renderCatList();
+  inp.value = '';
+  saveStorage(); renderCatList();
 }
+
 function delCat(idx, e) {
   e.stopPropagation();
-  cats.splice(idx,1);
-  if(activeCat===idx) activeCat=null;
-  else if(activeCat>idx) activeCat--;
+  cats.splice(idx, 1);
+  if (activeCat === idx) activeCat = null;
+  else if (activeCat > idx) activeCat--;
   saveStorage(); renderAll(); updateScope(); renderVisible();
 }
+
 function selCat(idx) {
-  activeCat = (activeCat===idx) ? null : idx;
+  activeCat = (activeCat === idx) ? null : idx;
   renderAll(); updateScope(); renderVisible();
 }
-function selAll() { activeCat=null; renderAll(); updateScope(); renderVisible(); }
+
+function selAll() { activeCat = null; renderAll(); updateScope(); renderVisible(); }
 
 function addSub() {
-  if(activeCat===null) return;
+  if (activeCat === null) return;
   const inp = document.getElementById('sub-inp');
   const val = inp.value.trim();
-  if(!val || cats[activeCat].words.includes(val)) { inp.value=''; return; }
-  cats[activeCat].words.push(val); inp.value='';
+  if (!val || cats[activeCat].words.includes(val)) { inp.value = ''; return; }
+  cats[activeCat].words.push(val);
+  inp.value = '';
   saveStorage(); renderSubArea(); renderCatList();
 }
+
 function delSub(word, e) {
   e.stopPropagation();
-  if(activeCat===null) return;
-  cats[activeCat].words = cats[activeCat].words.filter(w=>w!==word);
+  if (activeCat === null) return;
+  cats[activeCat].words = cats[activeCat].words.filter(w => w !== word);
   saveStorage(); renderSubArea(); renderCatList();
 }
 
 function cntForCat(idx) {
-  if(!allResults.length) return null;
-  const ws = cats[idx]?.words||[];
-  return allResults.filter(r=>ws.includes(r._kw)).length;
+  if (!allResults.length) return null;
+  const ws = cats[idx]?.words || [];
+  return allResults.filter(r => ws.includes(r._kw)).length;
 }
 
 function renderAll() { renderCatList(); renderSubArea(); }
 
 function renderCatList() {
-  const el = document.getElementById('cat-list');
+  const el    = document.getElementById('cat-list');
   const total = allResults.length;
-  const allA  = activeCat===null;
-  let html = `<div class="cat-item all${allA?' active':''}" onclick="selAll()">
+  const allA  = activeCat === null;
+  let html = `<div class="cat-item all${allA ? ' active' : ''}" onclick="selAll()">
     <i class="ti ti-layout-grid" style="font-size:15px;flex-shrink:0"></i>
     <span class="name">Todas las categorías</span>
-    ${total?`<span class="cnt">${total}</span>`:''}
+    ${total ? `<span class="cnt">${total}</span>` : ''}
   </div>`;
-  if(!cats.length) { html+='<div style="font-size:12px;color:var(--muted);padding:8px 2px;text-align:center">Sin categorías</div>'; }
-  else html += cats.map((c,i)=>{
-    const a = activeCat===i;
-    const cnt = cntForCat(i);
-    return `<div class="cat-item${a?' active':''}" onclick="selCat(${i})">
-      <i class="ti ti-folder" style="font-size:15px;flex-shrink:0"></i>
-      <span class="name" title="${c.name}">${c.name}</span>
-      ${cnt!==null?`<span class="cnt">${cnt}</span>`:''}
-      <button class="del" onclick="delCat(${i},event)">×</button>
-    </div>`;
-  }).join('');
+  if (!cats.length) {
+    html += '<div style="font-size:12px;color:var(--muted);padding:8px 2px;text-align:center">Sin categorías</div>';
+  } else {
+    html += cats.map((c, i) => {
+      const a   = activeCat === i;
+      const cnt = cntForCat(i);
+      return `<div class="cat-item${a ? ' active' : ''}" onclick="selCat(${i})">
+        <i class="ti ti-folder" style="font-size:15px;flex-shrink:0"></i>
+        <span class="name" title="${c.name}">${c.name}</span>
+        ${cnt !== null ? `<span class="cnt">${cnt}</span>` : ''}
+        <button class="del" onclick="delCat(${i},event)">×</button>
+      </div>`;
+    }).join('');
+  }
   el.innerHTML = html;
 }
 
 function renderSubArea() {
   const el = document.getElementById('sub-area');
-  if(activeCat===null) { el.innerHTML=''; return; }
+  if (activeCat === null) { el.innerHTML = ''; return; }
   const cat = cats[activeCat];
-  const ws = cat.words.length
-    ? cat.words.map(w=>`<div class="sub-word">
+  const ws  = cat.words.length
+    ? cat.words.map(w => `<div class="sub-word">
         <i class="ti ti-tag" style="font-size:12px;flex-shrink:0;color:var(--muted)"></i>
         <span>${w}</span>
         <button class="del-sw" onclick="delSub('${w.replace(/'/g,"\\'")}',event)">×</button>
@@ -361,7 +338,7 @@ function renderSubArea() {
   el.innerHTML = `<div class="sub-panel">
     <div class="sub-hdr">
       <span>Palabras en <strong>${cat.name}</strong></span>
-      <span>${cat.words.length} palbra${cat.words.length!==1?'s':''}</span>
+      <span>${cat.words.length} palabra${cat.words.length !== 1 ? 's' : ''}</span>
     </div>
     <div class="sub-words">${ws}</div>
     <div class="sub-add">
@@ -371,51 +348,52 @@ function renderSubArea() {
   </div>`;
 }
 
-// ── SCOPE BAR ─────────────────────────────────────────────────────────────────
 function updateScope() {
   const bar = document.getElementById('scope-bar');
-  if(activeCat===null) {
+  if (activeCat === null) {
     bar.innerHTML = `<i class="ti ti-layout-grid" style="font-size:14px;flex-shrink:0"></i>
       <span class="chip chip-all">Todas las categorías</span> · mayor monto primero`;
   } else {
-    const c = cats[activeCat];
-    const ws = c.words.map(w=>`<em>${w}</em>`).join(', ')||'sin palabras';
+    const c  = cats[activeCat];
+    const ws = c.words.map(w => `<em>${w}</em>`).join(', ') || 'sin palabras';
     bar.innerHTML = `<i class="ti ti-folder" style="font-size:14px;flex-shrink:0"></i>
       <span class="chip chip-cat">${c.name}</span> · ${ws}`;
   }
 }
 
-// ── HELPERS ──────────────────────────────────────────────────────────────────
 function fmtFecha(str) {
-  if(!str) return { text:'—', cls:'' };
-  const d=new Date(str), now=new Date();
-  const h=(d-now)/3600000;
-  const f=d.toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'});
-  const t=d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
-  return { text:`${f} · ${t}`, cls: h<0?'':h<24?'urgente':h<72?'pronto':'' };
+  if (!str) return { text: '—', cls: '' };
+  const d = new Date(str), now = new Date();
+  const h = (d - now) / 3600000;
+  const f = d.toLocaleDateString('es-CL', { day:'2-digit', month:'short', year:'numeric' });
+  const t = d.toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' });
+  return { text: `${f} · ${t}`, cls: h < 0 ? '' : h < 24 ? 'urgente' : h < 72 ? 'pronto' : '' };
 }
-function fmtMonto(m) { return(!m||m===0)?'—':'$'+Number(m).toLocaleString('es-CL'); }
+
+function fmtMonto(m) { return (!m || m === 0) ? '—' : '$' + Number(m).toLocaleString('es-CL'); }
+
 function badgeEstado(e) {
   const map = {
-    publicada:             ['badge-pub', 'Publicada'],
-    cerrada:               ['badge-cerr','Cerrada'],
-    desierta:              ['badge-des', 'Desierta'],
-    cancelada:             ['badge-canc','Cancelada'],
-    proveedor_seleccionado:['badge-sel', 'Adjudicada'],
-    oc_emitida:            ['badge-sel', 'OC emitida'],
+    publicada:              ['badge-pub',  'Publicada'],
+    cerrada:                ['badge-cerr', 'Cerrada'],
+    desierta:               ['badge-des',  'Desierta'],
+    cancelada:              ['badge-canc', 'Cancelada'],
+    proveedor_seleccionado: ['badge-sel',  'Adjudicada'],
+    oc_emitida:             ['badge-sel',  'OC emitida'],
   };
-  const [cls, lbl] = map[e]||['badge-cerr', e||'—'];
+  const [cls, lbl] = map[e] || ['badge-cerr', e || '—'];
   return `<span class="badge ${cls}">${lbl}</span>`;
 }
-function catFor(kw) { const c=cats.find(c=>c.words.includes(kw)); return c?c.name:kw; }
+
+function catFor(kw) { const c = cats.find(c => c.words.includes(kw)); return c ? c.name : kw; }
 
 function renderCard(item) {
-  const estado = item.estado?.codigo||'';
-  const nombre = item.nombre||'Sin título';
-  const org    = item.institucion?.organismo_comprador||'—';
+  const estado = item.estado?.codigo || '';
+  const nombre = item.nombre || 'Sin título';
+  const org    = item.institucion?.organismo_comprador || '—';
   const monto  = fmtMonto(item.montos?.monto_disponible_clp);
   const fecha  = fmtFecha(item.fechas?.fecha_cierre);
-  const codigo = item.codigo||'—';
+  const codigo = item.codigo || '—';
   const url    = `https://compra-agil.mercadopublico.cl/resumen-cotizacion/${encodeURIComponent(codigo)}`;
   const catN   = catFor(item._kw);
   return `<div class="card">
@@ -442,85 +420,84 @@ function renderCard(item) {
 }
 
 function renderVisible() {
-  const el = document.getElementById('main-area');
-  let vis = allResults;
-  if(activeCat!==null) {
-    const ws = cats[activeCat]?.words||[];
-    vis = allResults.filter(r=>ws.includes(r._kw));
+  const el  = document.getElementById('main-area');
+  let vis   = allResults;
+  if (activeCat !== null) {
+    const ws = cats[activeCat]?.words || [];
+    vis = allResults.filter(r => ws.includes(r._kw));
   }
   updateScope(); renderCatList();
-  if(!vis.length) {
-    el.innerHTML='<div class="empty"><i class="ti ti-search-off"></i>Sin resultados para esta categoría</div>';
+  if (!vis.length) {
+    el.innerHTML = '<div class="empty"><i class="ti ti-search-off"></i>Sin resultados para esta categoría</div>';
     return;
   }
   el.innerHTML =
     `<div class="results-meta">
-      <span class="results-count">${vis.length} resultado${vis.length!==1?'s':''}</span>
+      <span class="results-count">${vis.length} resultado${vis.length !== 1 ? 's' : ''}</span>
       <span class="sort-lbl"><i class="ti ti-arrow-down" style="font-size:11px"></i> Mayor monto primero</span>
     </div>` +
     vis.map(renderCard).join('');
 }
 
-// ── BÚSQUEDA ─────────────────────────────────────────────────────────────────
 async function buscarTodo() {
-  const el     = document.getElementById('main-area');
-  const estado = document.getElementById('estado-sel').value;
-  const region = document.getElementById('region-sel').value;
-  const allWords = cats.flatMap(c=>c.words);
+  const el       = document.getElementById('main-area');
+  const estado   = document.getElementById('estado-sel').value;
+  const region   = document.getElementById('region-sel').value;
+  const allWords = cats.flatMap(c => c.words);
 
-  if(!allWords.length) {
-    el.innerHTML='<div class="empty"><i class="ti ti-folder-search"></i>Agrega categorías con palabras clave para comenzar</div>';
+  if (!allWords.length) {
+    el.innerHTML = '<div class="empty"><i class="ti ti-folder-search"></i>Agrega categorías con palabras clave para comenzar</div>';
     return;
   }
 
-  let done=0, fetched=[], errors=[];
+  let done = 0, fetched = [], errors = [];
 
-  el.innerHTML=`<div class="progress-wrap">
+  el.innerHTML = `<div class="progress-wrap">
     <div>Buscando <strong id="p-kw">…</strong> · palabra <strong id="p-cur">1</strong> de <strong>${allWords.length}</strong></div>
     <div class="prog-track"><div class="prog-fill" id="p-fill" style="width:0%"></div></div>
   </div>`;
 
-  for(const kw of allWords) {
-    const pk=document.getElementById('p-kw'); if(pk) pk.textContent=`"${kw}"`;
+  for (const kw of allWords) {
+    const pk = document.getElementById('p-kw');
+    if (pk) pk.textContent = `"${kw}"`;
     try {
-      const qs = new URLSearchParams({ q: kw, estado, tamano:'50' });
-      if(region) qs.set('region', region);
+      const qs = new URLSearchParams({ q: kw, estado, tamano: '50' });
+      if (region) qs.set('region', region);
       const res  = await fetch(`/api/buscar?${qs.toString()}`);
       const data = await res.json();
-      console.log('API response:', JSON.stringify(data).slice(0,500));
-if(data?.payload?.items) {
-        data.payload.items.forEach(item=>{
-        const titulo = (item.nombre||'').toLowerCase();
-const kwLower = kw.toLowerCase();
-if(!fetched.find(r=>r.codigo===item.codigo) && kwLower.split(' ').every(word => {
-  if(word.length <= 2) {
-    return new RegExp('\\b' + word + '\\b', 'i').test(titulo);
-  }
-  return titulo.includes(word);
-})) {
-            item._kw = kw; fetched.push(item);
+      if (data?.payload?.items) {
+        data.payload.items.forEach(item => {
+          const titulo  = (item.nombre || '').toLowerCase();
+          const kwLower = kw.toLowerCase();
+          const match   = kwLower.split(' ').every(word => {
+            if (word.length <= 2) return new RegExp('\\b' + word + '\\b', 'i').test(titulo);
+            return titulo.includes(word);
+          });
+          if (!fetched.find(r => r.codigo === item.codigo) && match) {
+            item._kw = kw;
+            fetched.push(item);
           }
         });
-      } else if(data?.error) {
+      } else if (data?.error) {
         errors.push(`${kw}: ${data.error}`);
       }
-    } catch(e){ errors.push(`${kw}: ${e.message}`); }
+    } catch(e) { errors.push(`${kw}: ${e.message}`); }
     done++;
-    const pf=document.getElementById('p-fill'), pc=document.getElementById('p-cur');
-    if(pf) pf.style.width=Math.round((done/allWords.length)*100)+'%';
-    if(pc) pc.textContent=Math.min(done+1,allWords.length);
+    const pf = document.getElementById('p-fill');
+    const pc = document.getElementById('p-cur');
+    if (pf) pf.style.width = Math.round((done / allWords.length) * 100) + '%';
+    if (pc) pc.textContent = Math.min(done + 1, allWords.length);
   }
 
-  // Ordenar por monto descendente
-  allResults = fetched.sort((a,b)=>
-    (b.montos?.monto_disponible_clp||0)-(a.montos?.monto_disponible_clp||0)
+  allResults = fetched.sort((a, b) =>
+    (b.montos?.monto_disponible_clp || 0) - (a.montos?.monto_disponible_clp || 0)
   );
 
-  activeCat=null;
+  activeCat = null;
   renderAll(); updateScope();
 
-  if(errors.length && !allResults.length) {
-    el.innerHTML=`<div class="err-box"><i class="ti ti-alert-circle" style="font-size:14px"></i>
+  if (errors.length && !allResults.length) {
+    el.innerHTML = `<div class="err-box"><i class="ti ti-alert-circle" style="font-size:14px"></i>
       Error al consultar la API: ${errors[0]}<br>
       <small>Verifica que tu API key esté activa en <a href="https://api.mercadopublico.cl" target="_blank">api.mercadopublico.cl</a></small>
     </div>`;
@@ -530,11 +507,11 @@ if(!fetched.find(r=>r.codigo===item.codigo) && kwLower.split(' ').every(word => 
   renderVisible();
 }
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
-loadStorage().then(() => {  });
-renderAll();
-updateScope();
-buscarTodo();
+loadStorage().then(() => {
+  renderAll();
+  updateScope();
+  buscarTodo();
+});
 </script>
 </body>
 </html>
