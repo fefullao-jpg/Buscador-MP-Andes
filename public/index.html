@@ -235,7 +235,26 @@ let apiKey     = DEF_KEY;
 let activeCat  = null;  // null = todas
 let allResults = [];    // todos los resultados cargados
 
-function loadStorage() {
+async function loadStorage() {
+  try {
+    const res = await fetch('/api/categorias');
+    const data = await res.json();
+    if(data.cats && data.cats.length) cats = data.cats;
+    else seedCats();
+  } catch(e) { seedCats(); }
+  try { const s = localStorage.getItem(KEY_KEY); if(s) apiKey = s; } catch(e){}
+  document.getElementById('api-inp').value = apiKey;
+  updateBadge();
+}
+
+async function saveStorage() {
+  try { await fetch('/api/categorias', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cats })
+  }); } catch(e){}
+  try { localStorage.setItem(KEY_KEY, apiKey); } catch(e){}
+}
   try { const s = localStorage.getItem(CAT_KEY); if(s) cats = JSON.parse(s); } catch(e){}
   try { const s = localStorage.getItem(KEY_KEY);  if(s) apiKey = s; } catch(e){}
   if(!cats.length) seedCats();
