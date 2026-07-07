@@ -80,6 +80,14 @@
     .top-bar select { height: 34px; border-radius: var(--rs); border: 1px solid var(--border-md); padding: 0 10px; font-size: 13px; background: var(--card); color: var(--text); cursor: pointer; }
     .btn-buscar { height: 34px; padding: 0 16px; border-radius: var(--rs); border: none; background: var(--navy); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 7px; margin-left: auto; }
     .btn-buscar:hover { background: var(--navy-h); }
+    .btn-buscar-lic { height: 34px; padding: 0 14px; border-radius: var(--rs); border: 1px solid var(--border-md); background: var(--card); color: var(--navy); font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 7px; }
+    .btn-buscar-lic:hover { background: var(--side); }
+    .btn-buscar-lic:disabled { opacity: .55; cursor: not-allowed; }
+    .fuente-toggle { display: flex; border: 1px solid var(--border-md); border-radius: var(--rs); overflow: hidden; }
+    .ftg-btn { height: 34px; padding: 0 12px; border: none; background: var(--card); color: var(--text); font-size: 12px; font-weight: 600; cursor: pointer; }
+    .ftg-btn + .ftg-btn { border-left: 1px solid var(--border-md); }
+    .ftg-btn.active { background: var(--navy); color: #fff; }
+    .chip-src { background: #475569; color: #fff; }
     .scope-bar { padding: 8px 18px; font-size: 12px; color: var(--muted); background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 7px; flex-wrap: wrap; flex-shrink: 0; }
     .chip { display: inline-flex; align-items: center; border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 600; }
     .chip-all { background: var(--teal); color: #fff; }
@@ -205,7 +213,12 @@
         <option value="15">Arica y Parinacota</option>
         <option value="16">Ñuble</option>
       </select>
+      <div class="fuente-toggle" id="fuente-toggle">
+        <button class="ftg-btn active" data-f="ca" onclick="setFuente('ca')">Compra Ágil</button>
+        <button class="ftg-btn" data-f="lic" onclick="setFuente('lic')">Licitaciones</button>
+      </div>
       <button class="btn-buscar" onclick="buscarTodo()"><i class="ti ti-search"></i> Buscar todo</button>
+      <button class="btn-buscar-lic" id="btn-buscar-lic" onclick="buscarLicitaciones()"><i class="ti ti-gavel"></i> Buscar licitaciones</button>
     </div>
     <div class="scope-bar" id="scope-bar">
       <i class="ti ti-loader" style="font-size:14px;flex-shrink:0"></i>
@@ -230,6 +243,18 @@ let vistos        = [];
 let apiKey        = DEF_KEY;
 let activeCat     = null; // null = todas | número = índice de categoría | 'opp' = oportunidades
 let allResults    = [];
+let allResultsLic = [];
+let fuente        = 'ca'; // 'ca' = Compra Ágil | 'lic' = Licitaciones
+let licBuscada    = false;
+
+function currentResults() { return fuente === 'lic' ? allResultsLic : allResults; }
+
+function setFuente(f) {
+  fuente = f;
+  document.querySelectorAll('.ftg-btn').forEach(b => b.classList.toggle('active', b.dataset.f === f));
+  activeCat = null;
+  renderAll(); updateScope(); renderVisible();
+}
 
 async function loadStorage() {
   try {
@@ -340,7 +365,7 @@ function toggleOpp(codigo, e) {
   if (idx >= 0) {
     oportunidades.splice(idx, 1);
   } else {
-    const item = allResults.find(r => r.codigo === codigo) || oportunidades.find(o => o.codigo === codigo);
+    const item = currentResults().find(r => r.codigo === codigo) || oportunidades.find(o => o.codigo === codigo);
     if (item) oportunidades.unshift({ ...item, _savedAt: new Date().toISOString() });
   }
   saveOportunidades();
@@ -412,9 +437,10 @@ function delSub(word, e) {
 }
 
 function cntForCat(idx) {
-  if (!allResults.length) return null;
+  const res = currentResults();
+  if (!res.length) return null;
   const ws = cats[idx]?.words || [];
-  return allResults.filter(r => ws.includes(r._kw)).length;
+  return res.filter(r => ws.includes(r._kw)).length;
 }
 
 function renderAll() { renderCatList(); renderSubArea(); renderOppCount(); }
@@ -431,7 +457,7 @@ function renderOppCount() {
 
 function renderCatList() {
   const el    = document.getElementById('cat-list');
-  const total = allResults.length;
+  const total = currentResults().length;
   const allA  = activeCat === null;
   let html = `<div class="cat-item all${allA ? ' active' : ''}" onclick="selAll()">
     <i class="ti ti-layout-grid" style="font-size:15px;flex-shrink:0"></i>
@@ -481,16 +507,17 @@ function renderSubArea() {
 
 function updateScope() {
   const bar = document.getElementById('scope-bar');
+  const src = `<span class="chip chip-src">${fuente === 'lic' ? 'Licitaciones' : 'Compra Ágil'}</span>`;
   if (activeCat === 'opp') {
     bar.innerHTML = `<i class="ti ti-star" style="font-size:14px;flex-shrink:0"></i>
       <span class="chip chip-opp">Oportunidades guardadas</span> · ${oportunidades.length} marcada${oportunidades.length !== 1 ? 's' : ''}`;
   } else if (activeCat === null) {
-    bar.innerHTML = `<i class="ti ti-layout-grid" style="font-size:14px;flex-shrink:0"></i>
+    bar.innerHTML = `${src} <i class="ti ti-layout-grid" style="font-size:14px;flex-shrink:0"></i>
       <span class="chip chip-all">Todas las categorías</span> · mayor monto primero`;
   } else {
     const c  = cats[activeCat];
     const ws = c.words.map(w => `<em>${w}</em>`).join(', ') || 'sin palabras';
-    bar.innerHTML = `<i class="ti ti-folder" style="font-size:14px;flex-shrink:0"></i>
+    bar.innerHTML = `${src} <i class="ti ti-folder" style="font-size:14px;flex-shrink:0"></i>
       <span class="chip chip-cat">${c.name}</span> · ${ws}`;
   }
 }
@@ -514,6 +541,8 @@ function badgeEstado(e) {
     cancelada:              ['badge-canc', 'Cancelada'],
     proveedor_seleccionado: ['badge-sel',  'Adjudicada'],
     oc_emitida:             ['badge-sel',  'OC emitida'],
+    revocada:                ['badge-canc', 'Revocada'],
+    suspendida:              ['badge-des',  'Suspendida'],
   };
   const [cls, lbl] = map[e] || ['badge-cerr', e || '—'];
   return `<span class="badge ${cls}">${lbl}</span>`;
@@ -528,7 +557,9 @@ function renderCard(item) {
   const monto  = fmtMonto(item.montos?.monto_disponible_clp);
   const fecha  = fmtFecha(item.fechas?.fecha_cierre);
   const codigo = item.codigo || '—';
-  const url    = `https://compra-agil.mercadopublico.cl/resumen-cotizacion/${encodeURIComponent(codigo)}`;
+  const url    = item._tipo === 'lic'
+    ? `https://www.mercadopublico.cl/Procurement/Modules/RFB/DetailsAcquisition.aspx?idlicitacion=${encodeURIComponent(codigo)}`
+    : `https://compra-agil.mercadopublico.cl/resumen-cotizacion/${encodeURIComponent(codigo)}`;
   const catN   = catFor(item._kw);
   const marcada = isOpp(codigo);
   const visto   = esVisto(codigo);
@@ -565,17 +596,25 @@ function renderVisible() {
   let vis;
   if (activeCat === 'opp') {
     vis = oportunidades;
-  } else if (typeof activeCat === 'number') {
-    const ws = cats[activeCat]?.words || [];
-    vis = allResults.filter(r => ws.includes(r._kw));
   } else {
-    vis = allResults;
+    const base = currentResults();
+    if (typeof activeCat === 'number') {
+      const ws = cats[activeCat]?.words || [];
+      vis = base.filter(r => ws.includes(r._kw));
+    } else {
+      vis = base;
+    }
   }
   updateScope(); renderCatList(); renderOppCount();
   if (!vis.length) {
-    const msg = activeCat === 'opp'
-      ? 'Aún no has marcado ninguna oportunidad. Usa la estrella en cada resultado para guardarla aquí.'
-      : 'Sin resultados para esta categoría';
+    let msg;
+    if (activeCat === 'opp') {
+      msg = 'Aún no has marcado ninguna oportunidad. Usa la estrella en cada resultado para guardarla aquí.';
+    } else if (fuente === 'lic' && !licBuscada) {
+      msg = 'Presiona "Buscar licitaciones" para buscar tus categorías en licitaciones públicas.';
+    } else {
+      msg = 'Sin resultados para esta categoría';
+    }
     el.innerHTML = `<div class="empty"><i class="ti ti-search-off"></i>${msg}</div>`;
     return;
   }
@@ -588,6 +627,8 @@ function renderVisible() {
 }
 
 async function buscarTodo() {
+  fuente = 'ca';
+  document.querySelectorAll('.ftg-btn').forEach(b => b.classList.toggle('active', b.dataset.f === 'ca'));
   const el       = document.getElementById('main-area');
   const estado   = document.getElementById('estado-sel').value;
   const region   = document.getElementById('region-sel').value;
@@ -653,6 +694,110 @@ async function buscarTodo() {
   }
 
   renderVisible();
+}
+
+function estadoLicSlug(codigo) {
+  const map = { 5: 'publicada', 6: 'cerrada', 7: 'desierta', 8: 'proveedor_seleccionado', 18: 'revocada', 19: 'suspendida' };
+  return map[codigo] || 'cerrada';
+}
+
+async function buscarLicitaciones() {
+  const el       = document.getElementById('main-area');
+  const allWords = cats.flatMap(c => c.words);
+  const btn      = document.getElementById('btn-buscar-lic');
+
+  if (!allWords.length) {
+    el.innerHTML = '<div class="empty"><i class="ti ti-folder-search"></i>Agrega categorías con palabras clave para comenzar</div>';
+    return;
+  }
+
+  fuente = 'lic';
+  document.querySelectorAll('.ftg-btn').forEach(b => b.classList.toggle('active', b.dataset.f === 'lic'));
+  activeCat = null;
+  if (btn) btn.disabled = true;
+
+  el.innerHTML = `<div class="progress-wrap"><div>Cargando licitaciones activas publicadas hoy...</div></div>`;
+
+  let listado = [];
+  try {
+    const res  = await fetch('/api/licitaciones-lista');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    listado = data.listado || [];
+  } catch (e) {
+    el.innerHTML = `<div class="err-box"><i class="ti ti-alert-circle" style="font-size:14px"></i>
+      Error al consultar licitaciones: ${e.message}</div>`;
+    if (btn) btn.disabled = false;
+    return;
+  }
+
+  // Mismo criterio de coincidencia que Compra Ágil, aplicado localmente sobre el listado
+  const matches = [];
+  allWords.forEach(kw => {
+    const kwLower = kw.toLowerCase();
+    listado.forEach(item => {
+      const titulo = (item.Nombre || '').toLowerCase();
+      const match  = kwLower.split(' ').every(word => {
+        if (word.length <= 2) return new RegExp('\\b' + word + '\\b', 'i').test(titulo);
+        return titulo.includes(word);
+      });
+      if (match && !matches.find(m => m.CodigoExterno === item.CodigoExterno)) {
+        matches.push({ ...item, _kw: kw });
+      }
+    });
+  });
+
+  if (!matches.length) {
+    allResultsLic = [];
+    licBuscada = true;
+    renderAll(); updateScope(); renderVisible();
+    if (btn) btn.disabled = false;
+    return;
+  }
+
+  // Trae el detalle (organismo, monto, fechas) solo de las coincidencias encontradas
+  const detallados = [];
+  let done = 0;
+  for (const m of matches) {
+    el.innerHTML = `<div class="progress-wrap">
+      <div>Obteniendo detalle <strong>${done + 1}</strong> de <strong>${matches.length}</strong> licitaciones encontradas</div>
+      <div class="prog-track"><div class="prog-fill" style="width:${Math.round((done / matches.length) * 100)}%"></div></div>
+    </div>`;
+    try {
+      const res  = await fetch(`/api/licitaciones-detalle?codigo=${encodeURIComponent(m.CodigoExterno)}`);
+      const data = await res.json();
+      const d    = data.item;
+      detallados.push({
+        codigo: m.CodigoExterno,
+        nombre: d?.Nombre || m.Nombre,
+        institucion: { organismo_comprador: d?.Comprador?.NombreOrganismo || '—' },
+        montos: { monto_disponible_clp: d?.MontoEstimado || 0 },
+        fechas: { fecha_cierre: d?.Fechas?.FechaCierre || null },
+        estado: { codigo: estadoLicSlug(d?.CodigoEstado ?? m.CodigoEstado) },
+        _kw: m._kw,
+        _tipo: 'lic',
+      });
+    } catch (e) {
+      detallados.push({
+        codigo: m.CodigoExterno,
+        nombre: m.Nombre,
+        institucion: { organismo_comprador: '—' },
+        montos: { monto_disponible_clp: 0 },
+        fechas: { fecha_cierre: null },
+        estado: { codigo: estadoLicSlug(m.CodigoEstado) },
+        _kw: m._kw,
+        _tipo: 'lic',
+      });
+    }
+    done++;
+  }
+
+  allResultsLic = detallados.sort((a, b) =>
+    (b.montos.monto_disponible_clp || 0) - (a.montos.monto_disponible_clp || 0)
+  );
+  licBuscada = true;
+  renderAll(); updateScope(); renderVisible();
+  if (btn) btn.disabled = false;
 }
 
 loadStorage().then(() => {
