@@ -93,7 +93,8 @@
     .card:hover { border-color: var(--teal); box-shadow: var(--shadow-md); }
     .card.is-opp { border-color: rgba(245,158,11,.45); }
     .card-top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
-    .card-title { font-size: 13px; font-weight: 500; flex: 1; line-height: 1.45; }
+    .card-title { font-size: 13px; font-weight: 700; flex: 1; line-height: 1.45; }
+    .card-title.visto { font-weight: 500; }
     .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
     .badge-pub  { background: #dcfce7; color: #166534; }
     .badge-cerr { background: #f1f5f9; color: #475569; }
@@ -220,10 +221,12 @@
 const KEY_KEY    = 'mp_ca_key_v1';
 const BACKUP_KEY = 'mp_cats_backup';
 const OPP_BACKUP_KEY = 'mp_opp_backup';
+const VISTOS_BACKUP_KEY = 'mp_vistos_backup';
 const DEF_KEY    = '38366B56-462A-4B4F-9FEE-18F946D9F1B5';
 
 let cats          = [];
 let oportunidades = [];
+let vistos        = [];
 let apiKey        = DEF_KEY;
 let activeCat     = null; // null = todas | número = índice de categoría | 'opp' = oportunidades
 let allResults    = [];
@@ -246,6 +249,7 @@ async function loadStorage() {
     else seedCats();
   }
   await loadOportunidades();
+  await loadVistos();
   try { const s = localStorage.getItem(KEY_KEY); if(s) apiKey = s; } catch(e) {}
   document.getElementById('api-inp').value = apiKey;
   updateBadge();
@@ -289,6 +293,43 @@ async function saveOportunidades() {
     });
     try { localStorage.setItem(OPP_BACKUP_KEY, JSON.stringify(oportunidades)); } catch(e) {}
   } catch(e) {}
+}
+
+async function loadVistos() {
+  try {
+    const res  = await fetch('/api/vistos');
+    const data = await res.json();
+    if (data.codigos) {
+      vistos = data.codigos;
+      try { localStorage.setItem(VISTOS_BACKUP_KEY, JSON.stringify(vistos)); } catch(e) {}
+    } else {
+      const backup = localStorage.getItem(VISTOS_BACKUP_KEY);
+      if (backup) vistos = JSON.parse(backup);
+    }
+  } catch(e) {
+    const backup = localStorage.getItem(VISTOS_BACKUP_KEY);
+    if (backup) vistos = JSON.parse(backup);
+  }
+}
+
+async function saveVistos() {
+  try {
+    await fetch('/api/vistos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ codigos: vistos })
+    });
+    try { localStorage.setItem(VISTOS_BACKUP_KEY, JSON.stringify(vistos)); } catch(e) {}
+  } catch(e) {}
+}
+
+function esVisto(codigo) { return vistos.includes(codigo); }
+
+function marcarVisto(codigo) {
+  if (vistos.includes(codigo)) return;
+  vistos.push(codigo);
+  saveVistos();
+  renderVisible();
 }
 
 function isOpp(codigo) { return oportunidades.some(o => o.codigo === codigo); }
@@ -490,9 +531,10 @@ function renderCard(item) {
   const url    = `https://compra-agil.mercadopublico.cl/resumen-cotizacion/${encodeURIComponent(codigo)}`;
   const catN   = catFor(item._kw);
   const marcada = isOpp(codigo);
+  const visto   = esVisto(codigo);
   return `<div class="card${marcada ? ' is-opp' : ''}">
     <div class="card-top">
-      <div class="card-title">${nombre}</div>
+      <div class="card-title${visto ? ' visto' : ''}">${nombre}</div>
       ${badgeEstado(estado)}
     </div>
     <div class="card-grid">
@@ -510,7 +552,7 @@ function renderCard(item) {
         <button class="btn-star${marcada ? ' active' : ''}" onclick="toggleOpp('${codigo.replace(/'/g,"\\'")}', event)" title="${marcada ? 'Quitar de Oportunidades' : 'Marcar como oportunidad'}">
           <i class="ti ${marcada ? 'ti-star-filled' : 'ti-star'}"></i>
         </button>
-        <a class="link-ver" href="${url}" target="_blank" rel="noopener">
+        <a class="link-ver" href="${url}" target="_blank" rel="noopener" onclick="marcarVisto('${codigo.replace(/'/g,"\\'")}')">
           <i class="ti ti-external-link" style="font-size:13px"></i> Ver
         </a>
       </div>
@@ -577,47 +619,4 @@ async function buscarTodo() {
           const kwLower = kw.toLowerCase();
           const match   = kwLower.split(' ').every(word => {
             if (word.length <= 2) return new RegExp('\\b' + word + '\\b', 'i').test(titulo);
-            return titulo.includes(word);
-          });
-          if (!fetched.find(r => r.codigo === item.codigo) && match) {
-            item._kw = kw;
-            fetched.push(item);
-          }
-        });
-      } else if (data?.error) {
-        errors.push(`${kw}: ${data.error}`);
-      }
-    } catch(e) { errors.push(`${kw}: ${e.message}`); }
-    done++;
-    const pf = document.getElementById('p-fill');
-    const pc = document.getElementById('p-cur');
-    if (pf) pf.style.width = Math.round((done / allWords.length) * 100) + '%';
-    if (pc) pc.textContent = Math.min(done + 1, allWords.length);
-  }
-
-  allResults = fetched.sort((a, b) =>
-    (b.montos?.monto_disponible_clp || 0) - (a.montos?.monto_disponible_clp || 0)
-  );
-
-  activeCat = null;
-  renderAll(); updateScope();
-
-  if (errors.length && !allResults.length) {
-    el.innerHTML = `<div class="err-box"><i class="ti ti-alert-circle" style="font-size:14px"></i>
-      Error al consultar la API: ${errors[0]}<br>
-      <small>Verifica que tu API key esté activa en <a href="https://api.mercadopublico.cl" target="_blank">api.mercadopublico.cl</a></small>
-    </div>`;
-    return;
-  }
-
-  renderVisible();
-}
-
-loadStorage().then(() => {
-  renderAll();
-  updateScope();
-  buscarTodo();
-});
-</script>
-</body>
-</html>
+          
