@@ -619,4 +619,47 @@ async function buscarTodo() {
           const kwLower = kw.toLowerCase();
           const match   = kwLower.split(' ').every(word => {
             if (word.length <= 2) return new RegExp('\\b' + word + '\\b', 'i').test(titulo);
-          
+            return titulo.includes(word);
+          });
+          if (!fetched.find(r => r.codigo === item.codigo) && match) {
+            item._kw = kw;
+            fetched.push(item);
+          }
+        });
+      } else if (data?.error) {
+        errors.push(`${kw}: ${data.error}`);
+      }
+    } catch(e) { errors.push(`${kw}: ${e.message}`); }
+    done++;
+    const pf = document.getElementById('p-fill');
+    const pc = document.getElementById('p-cur');
+    if (pf) pf.style.width = Math.round((done / allWords.length) * 100) + '%';
+    if (pc) pc.textContent = Math.min(done + 1, allWords.length);
+  }
+
+  allResults = fetched.sort((a, b) =>
+    (b.montos?.monto_disponible_clp || 0) - (a.montos?.monto_disponible_clp || 0)
+  );
+
+  activeCat = null;
+  renderAll(); updateScope();
+
+  if (errors.length && !allResults.length) {
+    el.innerHTML = `<div class="err-box"><i class="ti ti-alert-circle" style="font-size:14px"></i>
+      Error al consultar la API: ${errors[0]}<br>
+      <small>Verifica que tu API key esté activa en <a href="https://api.mercadopublico.cl" target="_blank">api.mercadopublico.cl</a></small>
+    </div>`;
+    return;
+  }
+
+  renderVisible();
+}
+
+loadStorage().then(() => {
+  renderAll();
+  updateScope();
+  buscarTodo();
+});
+</script>
+</body>
+</html>
