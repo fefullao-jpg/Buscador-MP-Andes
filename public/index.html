@@ -601,6 +601,12 @@ function renderVisible() {
     if (typeof activeCat === 'number') {
       const ws = cats[activeCat]?.words || [];
       vis = base.filter(r => ws.includes(r._kw));
+      // Dentro de una categoría específica: más reciente primero (por fecha de publicación)
+      vis = [...vis].sort((a, b) => {
+        const da = new Date(a.fechas?.fecha_publicacion || 0).getTime();
+        const db = new Date(b.fechas?.fecha_publicacion || 0).getTime();
+        return db - da;
+      });
     } else {
       vis = base;
     }
@@ -618,10 +624,13 @@ function renderVisible() {
     el.innerHTML = `<div class="empty"><i class="ti ti-search-off"></i>${msg}</div>`;
     return;
   }
+  const sortLabel = (activeCat !== 'opp' && typeof activeCat === 'number')
+    ? 'Más reciente primero'
+    : 'Mayor monto primero';
   el.innerHTML =
     `<div class="results-meta">
       <span class="results-count">${vis.length} resultado${vis.length !== 1 ? 's' : ''}</span>
-      <span class="sort-lbl"><i class="ti ti-arrow-down" style="font-size:11px"></i> Mayor monto primero</span>
+      <span class="sort-lbl"><i class="ti ti-arrow-down" style="font-size:11px"></i> ${sortLabel}</span>
     </div>` +
     vis.map(renderCard).join('');
 }
@@ -772,7 +781,7 @@ async function buscarLicitaciones() {
         nombre: d?.Nombre || m.Nombre,
         institucion: { organismo_comprador: d?.Comprador?.NombreOrganismo || '—' },
         montos: { monto_disponible_clp: d?.MontoEstimado || 0 },
-        fechas: { fecha_cierre: d?.Fechas?.FechaCierre || null },
+        fechas: { fecha_cierre: d?.Fechas?.FechaCierre || null, fecha_publicacion: d?.Fechas?.FechaPublicacion || null },
         estado: { codigo: estadoLicSlug(d?.CodigoEstado ?? m.CodigoEstado) },
         _kw: m._kw,
         _tipo: 'lic',
@@ -783,7 +792,7 @@ async function buscarLicitaciones() {
         nombre: m.Nombre,
         institucion: { organismo_comprador: '—' },
         montos: { monto_disponible_clp: 0 },
-        fechas: { fecha_cierre: null },
+        fechas: { fecha_cierre: null, fecha_publicacion: null },
         estado: { codigo: estadoLicSlug(m.CodigoEstado) },
         _kw: m._kw,
         _tipo: 'lic',
