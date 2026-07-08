@@ -606,15 +606,15 @@ function renderVisible() {
     if (typeof activeCat === 'number') {
       const ws = cats[activeCat]?.words || [];
       vis = base.filter(r => ws.includes(r._kw));
-      // Dentro de una categoría específica: más reciente primero (por fecha de publicación)
-      vis = [...vis].sort((a, b) => {
-        const da = new Date(a.fechas?.fecha_publicacion || 0).getTime();
-        const db = new Date(b.fechas?.fecha_publicacion || 0).getTime();
-        return db - da;
-      });
     } else {
       vis = base;
     }
+    // Más reciente primero (por fecha de publicación), tanto en "Todas" como por categoría
+    vis = [...vis].sort((a, b) => {
+      const da = new Date(a.fechas?.fecha_publicacion || 0).getTime();
+      const db = new Date(b.fechas?.fecha_publicacion || 0).getTime();
+      return db - da;
+    });
   }
   updateScope(); renderCatList(); renderOppCount();
   if (!vis.length) {
@@ -629,9 +629,7 @@ function renderVisible() {
     el.innerHTML = `<div class="empty"><i class="ti ti-search-off"></i>${msg}</div>`;
     return;
   }
-  const sortLabel = (activeCat !== 'opp' && typeof activeCat === 'number')
-    ? 'Más reciente primero'
-    : 'Mayor monto primero';
+  const sortLabel = activeCat === 'opp' ? 'Guardadas' : 'Más reciente primero';
   el.innerHTML =
     `<div class="results-meta">
       <span class="results-count">${vis.length} resultado${vis.length !== 1 ? 's' : ''}</span>
