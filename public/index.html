@@ -109,6 +109,8 @@
     .badge-des  { background: #fef9c3; color: #854d0e; }
     .badge-canc { background: #fee2e2; color: #991b1b; }
     .badge-sel  { background: #eff6ff; color: #1d4ed8; }
+    .badge-nuevo { background: var(--teal); color: #fff; }
+    .badge-leido { background: #f1f5f9; color: #94a3b8; }
     .card-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     .field .flbl { font-size: 10px; color: var(--muted); margin-bottom: 3px; text-transform: uppercase; letter-spacing: .04em; }
     .field .fval { font-size: 12px; font-weight: 500; }
@@ -566,6 +568,7 @@ function renderCard(item) {
   return `<div class="card${marcada ? ' is-opp' : ''}">
     <div class="card-top">
       <div class="card-title${visto ? ' visto' : ''}">${nombre}</div>
+      <span class="badge ${visto ? 'badge-leido' : 'badge-nuevo'}">${visto ? 'Leído' : 'Nuevo'}</span>
       ${badgeEstado(estado)}
     </div>
     <div class="card-grid">
