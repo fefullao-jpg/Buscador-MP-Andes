@@ -6,6 +6,7 @@
   <title>Compra Ágil · Andes Medikeep</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/dist/tabler-icons.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root {
       --navy: #1E3A6E; --navy-h: #16305c;
@@ -65,6 +66,9 @@
     .sub-word .del-sw { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 0; opacity: 0; }
     .sub-word:hover .del-sw { opacity: 1; }
     .sub-word .del-sw:hover { color: #ef4444; }
+    .btn-precios { width: 100%; height: 32px; border-radius: var(--rs); border: 1px dashed var(--border-md); background: var(--card); color: var(--navy); font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; }
+    .btn-precios:hover { background: var(--side); border-style: solid; }
+    .btn-precios:disabled { opacity: .55; cursor: not-allowed; }
     .sub-add { display: flex; gap: 5px; }
     .sub-add input { flex: 1; height: 30px; border-radius: var(--rs); border: 1px solid var(--border-md); padding: 0 9px; font-size: 12px; background: var(--side); color: var(--text); min-width: 0; }
     .sub-add input:focus { outline: none; border-color: var(--teal); }
@@ -504,6 +508,9 @@ function renderSubArea() {
       <input type="text" id="sub-inp" placeholder="agregar palabra..." onkeydown="if(event.key==='Enter')addSub()" />
       <button class="btn-add-sw" onclick="addSub()" aria-label="Agregar">+</button>
     </div>
+    <button class="btn-precios" id="btn-precios" onclick="descargarPrecios(${activeCat})">
+      <i class="ti ti-file-spreadsheet"></i> Precios de referencia (Excel, 9 meses)
+    </button>
   </div>`;
 }
 
@@ -810,6 +817,145 @@ async function buscarLicitaciones() {
   licBuscada = true;
   renderAll(); updateScope(); renderVisible();
   if (btn) btn.disabled = false;
+}
+
+// --- Precios de referencia (histórico de Órdenes de Compra, on-demand) ---
+
+function tipoOcLabel(t) {
+  const map = { AG: 'Compra Ágil', LE: 'Licitación', LP: 'Licitación', LQ: 'Licitación', LR: 'Licitación', LS: 'Licitación', L1: 'Licitación', CM: 'Convenio Marco', E2: 'Trato Directo', TD: 'Trato Directo' };
+  return map[t] || (t || '—');
+}
+
+async function pLimitAll(items, limit, worker) {
+  let i = 0;
+  const results = [];
+  async function next() {
+    while (i < items.length) {
+      const idx = i++;
+      results[idx] = await worker(items[idx], idx);
+    }
+  }
+  await Promise.all(Array(Math.min(limit, items.length)).fill(0).map(next));
+  return results;
+}
+
+function generarExcelPrecios(nombreCat, filas) {
+  const data = [
+    ['Producto', 'Precio unitario neto (CLP)', 'Cantidad', 'Comprador', 'Vendedor', 'Fecha', 'Tipo', 'Código OC'],
+    ...filas.map(f => [f.producto, f.precio, f.cantidad, f.comprador, f.vendedor, f.fecha, f.tipo, f.codigo]),
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{ wch: 55 }, { wch: 20 }, { wch: 10 }, { wch: 38 }, { wch: 32 }, { wch: 12 }, { wch: 16 }, { wch: 20 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Precios');
+  const fname = `Precios_${nombreCat.replace(/[^a-zA-Z0-9]+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  XLSX.writeFile(wb, fname);
+}
+
+async function descargarPrecios(idx) {
+  if (typeof idx !== 'number' || !cats[idx]) return;
+  const cat      = cats[idx];
+  const allWords = cat.words;
+  const btn      = document.getElementById('btn-precios');
+  const el       = document.getElementById('main-area');
+
+  if (!allWords.length) {
+    alert('Esta categoría no tiene palabras clave todavía.');
+    return;
+  }
+
+  if (btn) btn.disabled = true;
+
+  const DIAS = 270; // ≈ 9 meses
+  const hoy = new Date();
+  const fechas = [];
+  for (let i = 0; i < DIAS; i++) {
+    const d = new Date(hoy);
+    d.setDate(d.getDate() - i);
+    fechas.push(`${String(d.getDate()).padStart(2, '0')}${String(d.getMonth() + 1).padStart(2, '0')}${d.getFullYear()}`);
+  }
+
+  const palabras = encodeURIComponent(allWords.join('|'));
+  const matches = [];
+  let doneDias = 0;
+
+  function renderProgresoDias() {
+    el.innerHTML = `<div class="progress-wrap">
+      <div>Revisando compras de <strong>${cat.name}</strong> · día <strong>${doneDias}</strong> de <strong>${DIAS}</strong> (≈9 meses)</div>
+      <div class="prog-track"><div class="prog-fill" style="width:${Math.round((doneDias / DIAS) * 100)}%"></div></div>
+      <div style="margin-top:6px;font-size:11px">${matches.length} coincidencias encontradas hasta ahora</div>
+    </div>`;
+  }
+  renderProgresoDias();
+
+  await pLimitAll(fechas, 8, async (fecha) => {
+    try {
+      const res  = await fetch(`/api/oc-lista?fecha=${fecha}&palabras=${palabras}`);
+      const data = await res.json();
+      if (data.matches) {
+        data.matches.forEach(m => {
+          if (!matches.find(x => x.Codigo === m.Codigo)) matches.push(m);
+        });
+      }
+    } catch (e) { /* se ignora el día con error y se sigue */ }
+    doneDias++;
+    if (doneDias % 4 === 0 || doneDias === DIAS) renderProgresoDias();
+  });
+
+  if (!matches.length) {
+    el.innerHTML = `<div class="empty"><i class="ti ti-file-off"></i>No se encontraron compras en los últimos 9 meses para "${cat.name}"</div>`;
+    if (btn) btn.disabled = false;
+    setTimeout(renderVisible, 2500);
+    return;
+  }
+
+  const filas = [];
+  let doneDet = 0;
+
+  function renderProgresoDetalle() {
+    el.innerHTML = `<div class="progress-wrap">
+      <div>Obteniendo precios <strong>${doneDet}</strong> de <strong>${matches.length}</strong> coincidencias</div>
+      <div class="prog-track"><div class="prog-fill" style="width:${Math.round((doneDet / matches.length) * 100)}%"></div></div>
+    </div>`;
+  }
+  renderProgresoDetalle();
+
+  await pLimitAll(matches, 6, async (m) => {
+    try {
+      const res  = await fetch(`/api/oc-detalle?codigo=${encodeURIComponent(m.Codigo)}`);
+      const data = await res.json();
+      const d    = data.item;
+      if (d?.Items?.Listado?.length) {
+        d.Items.Listado.forEach(it => {
+          filas.push({
+            producto: it.EspecificacionProveedor || it.EspecificacionComprador || it.Producto || d.Nombre,
+            precio: it.PrecioNeto || 0,
+            cantidad: it.Cantidad || 0,
+            comprador: d.Comprador?.NombreOrganismo || '—',
+            vendedor: d.Proveedor?.Nombre || '—',
+            fecha: (d.Fechas?.FechaAceptacion || d.Fechas?.FechaCreacion || '').slice(0, 10),
+            tipo: tipoOcLabel(d.Tipo),
+            codigo: d.Codigo,
+          });
+        });
+      }
+    } catch (e) { /* se ignora la OC con error y se sigue */ }
+    doneDet++;
+    if (doneDet % 3 === 0 || doneDet === matches.length) renderProgresoDetalle();
+  });
+
+  if (!filas.length) {
+    el.innerHTML = `<div class="empty"><i class="ti ti-file-off"></i>Se encontraron coincidencias pero no fue posible obtener el detalle de precios</div>`;
+    if (btn) btn.disabled = false;
+    setTimeout(renderVisible, 2500);
+    return;
+  }
+
+  filas.sort((a, b) => a.precio - b.precio);
+  generarExcelPrecios(cat.name, filas);
+
+  if (btn) btn.disabled = false;
+  renderVisible();
 }
 
 loadStorage().then(() => {
