@@ -113,8 +113,9 @@
     .badge-des  { background: #fef9c3; color: #854d0e; }
     .badge-canc { background: #fee2e2; color: #991b1b; }
     .badge-sel  { background: #eff6ff; color: #1d4ed8; }
-    .badge-nuevo { background: var(--teal); color: #fff; }
-    .badge-leido { background: #f1f5f9; color: #94a3b8; }
+    .badge-sinabrir { background: var(--teal); color: #fff; }
+    .badge-abierto { background: #f1f5f9; color: #94a3b8; }
+    .badge-recien { background: #16a34a; color: #fff; }
     .card-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     .field .flbl { font-size: 10px; color: var(--muted); margin-bottom: 3px; text-transform: uppercase; letter-spacing: .04em; }
     .field .fval { font-size: 12px; font-weight: 500; }
@@ -359,6 +360,27 @@ async function saveVistos() {
 
 function esVisto(codigo) { return vistos.includes(codigo); }
 
+// "Nuevo" (por barrido) es 100% local a este navegador — no se guarda en Redis ni se
+// comparte entre dispositivos/usuarios. Cada persona ve sus propias novedades.
+const NUEVO_BARRIDO_KEY = 'mp_ultimo_barrido_ca';
+let nuevosEnBarrido = new Set();
+
+function esNuevoEnBarrido(codigo) { return nuevosEnBarrido.has(codigo); }
+
+function actualizarNuevosEnBarrido(codigos) {
+  let anterior = null;
+  try {
+    const raw = localStorage.getItem(NUEVO_BARRIDO_KEY);
+    if (raw) anterior = JSON.parse(raw);
+  } catch (e) {}
+  nuevosEnBarrido = new Set();
+  if (anterior) {
+    const prevSet = new Set(anterior);
+    codigos.forEach(c => { if (!prevSet.has(c)) nuevosEnBarrido.add(c); });
+  }
+  try { localStorage.setItem(NUEVO_BARRIDO_KEY, JSON.stringify(codigos)); } catch (e) {}
+}
+
 function marcarVisto(codigo) {
   if (vistos.includes(codigo)) return;
   vistos.push(codigo);
@@ -576,10 +598,12 @@ function renderCard(item) {
   const catN   = catFor(item._kw);
   const marcada = isOpp(codigo);
   const visto   = esVisto(codigo);
+  const esNuevo = esNuevoEnBarrido(codigo);
   return `<div class="card${marcada ? ' is-opp' : ''}">
     <div class="card-top">
       <div class="card-title${visto ? ' visto' : ''}">${nombre}</div>
-      <span class="badge ${visto ? 'badge-leido' : 'badge-nuevo'}">${visto ? 'Leído' : 'Nuevo'}</span>
+      ${esNuevo ? '<span class="badge badge-recien">Nuevo</span>' : ''}
+      <span class="badge ${visto ? 'badge-abierto' : 'badge-sinabrir'}">${visto ? 'Abierto' : 'Sin abrir'}</span>
       ${badgeEstado(estado)}
     </div>
     <div class="card-grid">
@@ -667,16 +691,21 @@ async function buscarTodo() {
     return;
   }
 
-  let done = 0, fetched = [], errors = [];
+  let done = 0;
+  const fetched = [];
+  const errors  = [];
 
-  el.innerHTML = `<div class="progress-wrap">
-    <div>Buscando <strong id="p-kw">…</strong> · palabra <strong id="p-cur">1</strong> de <strong>${allWords.length}</strong></div>
-    <div class="prog-track"><div class="prog-fill" id="p-fill" style="width:0%"></div></div>
-  </div>`;
+  function renderProgresoBusqueda() {
+    el.innerHTML = `<div class="progress-wrap">
+      <div>Buscando <strong>${done}</strong> de <strong>${allWords.length}</strong> palabras clave</div>
+      <div class="prog-track"><div class="prog-fill" style="width:${Math.round((done / allWords.length) * 100)}%"></div></div>
+    </div>`;
+  }
+  renderProgresoBusqueda();
 
-  for (const kw of allWords) {
-    const pk = document.getElementById('p-kw');
-    if (pk) pk.textContent = `"${kw}"`;
+  // Se consultan varias palabras clave en paralelo (no cambia qué se trae, solo la
+  // velocidad): antes se esperaba una por una, ahora se piden varias a la vez.
+  await pLimitAll(allWords, 6, async (kw) => {
     try {
       const qs = new URLSearchParams({ q: kw, estado, tamano: '50' });
       if (region) qs.set('region', region);
@@ -700,15 +729,15 @@ async function buscarTodo() {
       }
     } catch(e) { errors.push(`${kw}: ${e.message}`); }
     done++;
-    const pf = document.getElementById('p-fill');
-    const pc = document.getElementById('p-cur');
-    if (pf) pf.style.width = Math.round((done / allWords.length) * 100) + '%';
-    if (pc) pc.textContent = Math.min(done + 1, allWords.length);
-  }
+    renderProgresoBusqueda();
+  });
 
   allResults = fetched.sort((a, b) =>
     (b.montos?.monto_disponible_clp || 0) - (a.montos?.monto_disponible_clp || 0)
   );
+
+  // Marca localmente (en este navegador) cuáles resultados no estaban en el barrido anterior
+  actualizarNuevosEnBarrido(allResults.map(r => r.codigo));
 
   activeCat = null;
   renderAll(); updateScope();
