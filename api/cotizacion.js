@@ -41,7 +41,7 @@ async function datosLicitacion(codigo) {
 }
 
 async function datosCompraAgil(codigo) {
-  // 1) intenta el detalle (trae más campos, incluida la dirección de despacho si existe)
+  // 1) intenta el detalle (trae la dirección de entrega del proceso)
   try {
     const r = await fetch(`${BASE_V2}/v2/compra-agil/${encodeURIComponent(codigo)}`, {
       headers: { ticket: TICKET },
@@ -50,15 +50,17 @@ async function datosCompraAgil(codigo) {
       const data = await r.json();
       const p    = data?.payload || data;
       const ins  = p?.institucion || {};
-      const ent  = p?.entrega || p?.despacho || {};
-      const dir  = limpiar(ins.direccion || ins.direccion_unidad || p?.direccion);
       const org  = limpiar(ins.organismo_comprador || ins.unidad_compra);
       if (org) {
+        // En Compra Ágil la institución no trae dirección propia: la única dirección
+        // del proceso es la de entrega, así que esa se usa como dirección del cliente
+        // y el lugar de despacho la refleja mediante la fórmula =C19 de la plantilla.
+        const dirEntrega = limpiar(p?.entrega?.direccion_entrega);
         return {
           organismo: org,
           rut:       limpiar(ins.rut),
-          direccion: armarDireccion(dir, ins.comuna, ins.nombre_region || ins.region),
-          direccionEntrega: limpiar(ent.direccion || ent.direccion_despacho || p?.direccion_despacho),
+          direccion: dirEntrega || armarDireccion('', '', ins.nombre_region),
+          direccionEntrega: '',
         };
       }
     }
