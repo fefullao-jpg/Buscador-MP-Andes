@@ -133,6 +133,8 @@
     .btn-star.active:hover { background: var(--amber-h); border-color: var(--amber-h); color: #fff; }
     .btn-cotiz { font-size: 11px; font-weight: 600; height: 30px; padding: 0 11px; border-radius: var(--rs); border: 1px solid var(--navy); background: var(--navy); color: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; flex-shrink: 0; }
     .btn-cotiz:hover { background: var(--navy-h); }
+    .btn-cotiz.emc { background: var(--teal); border-color: var(--teal); }
+    .btn-cotiz.emc:hover { background: var(--teal-h); border-color: var(--teal-h); }
     .link-ver { font-size: 12px; color: var(--teal); text-decoration: none; display: inline-flex; align-items: center; gap: 3px; font-weight: 500; white-space: nowrap; }
     .link-ver:hover { text-decoration: underline; }
     .empty { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 13px; }
@@ -600,6 +602,9 @@ function renderCard(item) {
         <button class="btn-cotiz" onclick="generarCotizacion('${codigo.replace(/'/g,"\\'")}', '${item._tipo === 'lic' ? 'lic' : 'ca'}', event)" title="Generar Cotización AMK en Excel">
           <i class="ti ti-file-spreadsheet" style="font-size:13px"></i> Generar Cotización AMK
         </button>
+        <button class="btn-cotiz emc" onclick="generarCotizacion('${codigo.replace(/'/g,"\\'")}', '${item._tipo === 'lic' ? 'lic' : 'ca'}', event, 'emc')" title="Generar Cotización EM CHILE en Excel">
+          <i class="ti ti-file-spreadsheet" style="font-size:13px"></i> COT EMC
+        </button>
         <a class="link-ver" href="${url}" target="_blank" rel="noopener" onclick="marcarVisto('${codigo.replace(/'/g,"\\'")}')">
           <i class="ti ti-external-link" style="font-size:13px"></i> Ver
         </a>
@@ -826,9 +831,10 @@ async function buscarLicitaciones() {
 
 // --- Cotización AMK (Excel a partir de la plantilla de Andes Medikeep) ---
 
-function generarCotizacion(codigo, tipo, e) {
+function generarCotizacion(codigo, tipo, e, formato) {
   if (e) e.stopPropagation();
-  const url = `/api/cotizacion?codigo=${encodeURIComponent(codigo)}&tipo=${encodeURIComponent(tipo || 'ca')}`;
+  let url = `/api/cotizacion?codigo=${encodeURIComponent(codigo)}&tipo=${encodeURIComponent(tipo || 'ca')}`;
+  if (formato) url += `&formato=${encodeURIComponent(formato)}`;
   const a = document.createElement('a');
   a.href = url;
   a.rel = 'noopener';

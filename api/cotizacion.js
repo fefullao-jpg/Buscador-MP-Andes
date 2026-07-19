@@ -4,6 +4,7 @@
 // quedan en blanco para llenarlos manualmente.
 import ExcelJS from 'exceljs';
 import { PLANTILLA_B64 } from './_lib/plantilla-cotizacion.js';
+import { PLANTILLA_EMC_B64 } from './_lib/plantilla-cotizacion-emc.js';
 
 const TICKET  = process.env.MP_TICKET || '38366B56-462A-4B4F-9FEE-18F946D9F1B5';
 const BASE_V1 = 'https://api.mercadopublico.cl/servicios/v1/publico/licitaciones.json';
@@ -88,41 +89,57 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
 
-  const { codigo, tipo } = req.query;
+  const { codigo, tipo, formato } = req.query;
   if (!codigo) return res.status(400).json({ error: 'Falta parámetro codigo' });
+  const esEmc = String(formato || '').toLowerCase() === 'emc';
 
   try {
     const info = tipo === 'lic' ? await datosLicitacion(codigo) : await datosCompraAgil(codigo);
 
     const wb = new ExcelJS.Workbook();
-    await wb.xlsx.load(Buffer.from(PLANTILLA_B64, 'base64'));
+    await wb.xlsx.load(Buffer.from(esEmc ? PLANTILLA_EMC_B64 : PLANTILLA_B64, 'base64'));
     const ws = wb.getWorksheet('Cotización') || wb.worksheets[0];
 
-    // --- Datos del cliente / solicitud ---
     const ahora = new Date();
     const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
-    ws.getCell('C16').value = hoy;                       // Fecha de emisión (fecha del día)
-    ws.getCell('C16').numFmt = 'dd-mm-yyyy';
-    ws.getCell('C17').value = info.organismo || '';      // Dirigido a
-    ws.getCell('C18').value = info.rut || '';            // RUT
-    ws.getCell('C19').value = info.direccion || '';      // Dirección del organismo
-    ws.getCell('C20').value = codigo;                    // ID de la solicitud
-    // C21 (vigencia) se mantiene tal cual viene en la plantilla
 
-    // --- Detalle de productos: se deja en blanco para completar a mano ---
-    // (D25 descripción, E25 cantidad, F25 precio unitario). Las fórmulas de
-    // subtotal, neto, IVA y total se conservan intactas.
-    ['D25', 'E25', 'F25'].forEach(ref => { ws.getCell(ref).value = null; });
+    if (esEmc) {
+      // ---------- Formato EM CHILE SpA ----------
+      ws.getCell('E1').value = codigo;                   // COTIZACIÓN N°
+      ws.getCell('E2').value = hoy;                      // FECHA
+      ws.getCell('E2').numFmt = 'dd-mm-yyyy';
+      // E3 (VALIDEZ) y los datos de EM CHILE (A5:B8) se mantienen tal cual
 
-    // --- Condiciones comerciales ---
-    ws.getCell('C32').value = null;                      // Plazo de entrega: manual
-    if (info.direccionEntrega) {
-      ws.getCell('C33').value = info.direccionEntrega;   // lugar de despacho indicado en el proceso
+      ws.getCell('B12').value = info.organismo || '';    // Razón social del cliente
+      ws.getCell('B13').value = info.rut || '';          // RUT del cliente
+      ws.getCell('B14').value = info.direccionEntrega || info.direccion || ''; // Dirección
+
+      // Detalle en blanco para completar a mano (descripción, cantidad,
+      // plazo de entrega y valor unitario). Se conservan A17 y las fórmulas.
+      ['B17', 'C17', 'D17', 'E17'].forEach(ref => { ws.getCell(ref).value = null; });
+    } else {
+      // ---------- Formato Andes Medikeep ----------
+      ws.getCell('C16').value = hoy;                     // Fecha de emisión (fecha del día)
+      ws.getCell('C16').numFmt = 'dd-mm-yyyy';
+      ws.getCell('C17').value = info.organismo || '';    // Dirigido a
+      ws.getCell('C18').value = info.rut || '';          // RUT
+      ws.getCell('C19').value = info.direccion || '';    // Dirección del organismo
+      ws.getCell('C20').value = codigo;                  // ID de la solicitud
+      // C21 (vigencia) se mantiene tal cual viene en la plantilla
+
+      // Detalle de productos en blanco para completar a mano. Las fórmulas de
+      // subtotal, neto, IVA y total se conservan intactas.
+      ['D25', 'E25', 'F25'].forEach(ref => { ws.getCell(ref).value = null; });
+
+      ws.getCell('C32').value = null;                    // Plazo de entrega: manual
+      if (info.direccionEntrega) {
+        ws.getCell('C33').value = info.direccionEntrega; // lugar de despacho del proceso
+      }
+      // si no viene indicado, C33 mantiene la fórmula =C19
     }
-    // si no viene indicado, C33 mantiene la fórmula =C19 (dirección de la institución)
 
     const buffer = await wb.xlsx.writeBuffer();
-    const nombre = `Cotizacion ${codigo}.xlsx`;
+    const nombre = esEmc ? `EM COT ${codigo}.xlsx` : `Cotizacion ${codigo}.xlsx`;
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${nombre}"; filename*=UTF-8''${encodeURIComponent(nombre)}`);
