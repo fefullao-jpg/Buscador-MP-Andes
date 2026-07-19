@@ -3,5 +3,8 @@
   "version": "1.0.0",
   "description": "Buscador de Compra Ágil — Andes Medikeep",
   "type": "module",
-  "engines": { "node": ">=18" }
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  }
 }

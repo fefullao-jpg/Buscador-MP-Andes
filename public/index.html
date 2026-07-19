@@ -131,6 +131,8 @@
     .btn-star:hover { border-color: var(--amber); color: var(--amber); }
     .btn-star.active { background: var(--amber); border-color: var(--amber); color: #fff; }
     .btn-star.active:hover { background: var(--amber-h); border-color: var(--amber-h); color: #fff; }
+    .btn-cotiz { font-size: 11px; font-weight: 600; height: 30px; padding: 0 11px; border-radius: var(--rs); border: 1px solid var(--navy); background: var(--navy); color: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; flex-shrink: 0; }
+    .btn-cotiz:hover { background: var(--navy-h); }
     .link-ver { font-size: 12px; color: var(--teal); text-decoration: none; display: inline-flex; align-items: center; gap: 3px; font-weight: 500; white-space: nowrap; }
     .link-ver:hover { text-decoration: underline; }
     .empty { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 13px; }
@@ -595,6 +597,9 @@ function renderCard(item) {
         <button class="btn-star${marcada ? ' active' : ''}" onclick="toggleOpp('${codigo.replace(/'/g,"\\'")}', event)" title="${marcada ? 'Quitar de Oportunidades' : 'Marcar como oportunidad'}">
           <i class="ti ${marcada ? 'ti-star-filled' : 'ti-star'}"></i>
         </button>
+        <button class="btn-cotiz" onclick="generarCotizacion('${codigo.replace(/'/g,"\\'")}', '${item._tipo === 'lic' ? 'lic' : 'ca'}', event)" title="Generar Cotización AMK en Excel">
+          <i class="ti ti-file-spreadsheet" style="font-size:13px"></i> Generar Cotización AMK
+        </button>
         <a class="link-ver" href="${url}" target="_blank" rel="noopener" onclick="marcarVisto('${codigo.replace(/'/g,"\\'")}')">
           <i class="ti ti-external-link" style="font-size:13px"></i> Ver
         </a>
@@ -817,6 +822,19 @@ async function buscarLicitaciones() {
   licBuscada = true;
   renderAll(); updateScope(); renderVisible();
   if (btn) btn.disabled = false;
+}
+
+// --- Cotización AMK (Excel a partir de la plantilla de Andes Medikeep) ---
+
+function generarCotizacion(codigo, tipo, e) {
+  if (e) e.stopPropagation();
+  const url = `/api/cotizacion?codigo=${encodeURIComponent(codigo)}&tipo=${encodeURIComponent(tipo || 'ca')}`;
+  const a = document.createElement('a');
+  a.href = url;
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 // --- Precios de referencia (histórico de Órdenes de Compra, on-demand) ---
