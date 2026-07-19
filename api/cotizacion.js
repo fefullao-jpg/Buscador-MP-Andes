@@ -15,14 +15,24 @@ function limpiar(v) {
 }
 
 // Arma una dirección legible a partir de calle / comuna / región
+// Normaliza para comparar: minúsculas, sin tildes y sin espacios sobrantes
+function normalizar(v) {
+  return limpiar(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+// Une calle, comuna y región en una sola línea, agregando lo que falte y sin
+// repetir lo que ya venga incluido dentro del texto de la dirección.
 function armarDireccion(calle, comuna, region) {
-  const partes = [limpiar(calle), limpiar(comuna), limpiar(region)].filter(Boolean);
-  // evita repetir comuna o región si ya vienen dentro de la calle
-  const vistos = [];
-  for (const p of partes) {
-    if (!vistos.some(v => v.toLowerCase() === p.toLowerCase())) vistos.push(p);
+  const partes = [calle, comuna, region];
+  const salida = [];
+  for (const raw of partes) {
+    const p = limpiar(raw);
+    if (!p) continue;
+    const acumulado = normalizar(salida.join(', '));
+    if (acumulado.includes(normalizar(p))) continue; // ya está mencionada
+    salida.push(p);
   }
-  return vistos.join(', ');
+  return salida.join(', ');
 }
 
 async function datosLicitacion(codigo) {
@@ -60,7 +70,7 @@ async function datosCompraAgil(codigo) {
         return {
           organismo: org,
           rut:       limpiar(ins.rut),
-          direccion: dirEntrega || armarDireccion('', '', ins.nombre_region),
+          direccion: armarDireccion(dirEntrega, '', ins.nombre_region),
           direccionEntrega: '',
         };
       }
