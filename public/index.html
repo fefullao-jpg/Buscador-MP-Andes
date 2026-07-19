@@ -692,7 +692,6 @@ async function buscarTodo() {
   }
 
   let done = 0;
-  const fetched = [];
   const errors  = [];
 
   function renderProgresoBusqueda() {
@@ -705,7 +704,10 @@ async function buscarTodo() {
 
   // Se consultan varias palabras clave en paralelo (no cambia qué se trae, solo la
   // velocidad): antes se esperaba una por una, ahora se piden varias a la vez.
-  await pLimitAll(allWords, 6, async (kw) => {
+  // Cada palabra devuelve su propia lista; la mezcla final se hace después, en el
+  // orden original de las categorías, para que la atribución sea siempre la misma.
+  const porPalabra = await pLimitAll(allWords, 6, async (kw) => {
+    const encontrados = [];
     try {
       const qs = new URLSearchParams({ q: kw, estado, tamano: '50' });
       if (region) qs.set('region', region);
@@ -719,10 +721,7 @@ async function buscarTodo() {
             if (word.length <= 2) return new RegExp('\\b' + word + '\\b', 'i').test(titulo);
             return titulo.includes(word);
           });
-          if (!fetched.find(r => r.codigo === item.codigo) && match) {
-            item._kw = kw;
-            fetched.push(item);
-          }
+          if (match) encontrados.push({ ...item, _kw: kw });
         });
       } else if (data?.error) {
         errors.push(`${kw}: ${data.error}`);
@@ -730,6 +729,16 @@ async function buscarTodo() {
     } catch(e) { errors.push(`${kw}: ${e.message}`); }
     done++;
     renderProgresoBusqueda();
+    return encontrados;
+  });
+
+  // Mezcla en el orden de la lista de palabras: si una compra coincide con varias
+  // categorías, queda siempre en la primera, igual que en la versión secuencial.
+  const fetched = [];
+  porPalabra.forEach(lista => {
+    (lista || []).forEach(item => {
+      if (!fetched.find(r => r.codigo === item.codigo)) fetched.push(item);
+    });
   });
 
   allResults = fetched.sort((a, b) =>
