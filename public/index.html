@@ -596,14 +596,14 @@ function renderCard(item) {
         <span class="pill-cod">${codigo}</span>
       </div>
       <div class="card-actions">
-        <button class="btn-star${marcada ? ' active' : ''}" onclick="toggleOpp('${codigo.replace(/'/g,"\\'")}', event)" title="${marcada ? 'Quitar de Oportunidades' : 'Marcar como oportunidad'}">
-          <i class="ti ${marcada ? 'ti-star-filled' : 'ti-star'}"></i>
-        </button>
-        <button class="btn-cotiz" onclick="generarCotizacion('${codigo.replace(/'/g,"\\'")}', '${item._tipo === 'lic' ? 'lic' : 'ca'}', event)" title="Generar Cotización AMK en Excel">
-          <i class="ti ti-file-spreadsheet" style="font-size:13px"></i> Generar Cotización AMK
+        <button class="btn-cotiz" onclick="generarCotizacion('${codigo.replace(/'/g,"\\'")}', '${item._tipo === 'lic' ? 'lic' : 'ca'}', event)" title="Generar Cotización Andes Medikeep en Excel">
+          <i class="ti ti-file-spreadsheet" style="font-size:13px"></i> COT AMK
         </button>
         <button class="btn-cotiz emc" onclick="generarCotizacion('${codigo.replace(/'/g,"\\'")}', '${item._tipo === 'lic' ? 'lic' : 'ca'}', event, 'emc')" title="Generar Cotización EM CHILE en Excel">
           <i class="ti ti-file-spreadsheet" style="font-size:13px"></i> COT EMC
+        </button>
+        <button class="btn-star${marcada ? ' active' : ''}" onclick="toggleOpp('${codigo.replace(/'/g,"\\'")}', event)" title="${marcada ? 'Quitar de Oportunidades' : 'Marcar como oportunidad'}">
+          <i class="ti ${marcada ? 'ti-star-filled' : 'ti-star'}"></i>
         </button>
         <a class="link-ver" href="${url}" target="_blank" rel="noopener" onclick="marcarVisto('${codigo.replace(/'/g,"\\'")}')">
           <i class="ti ti-external-link" style="font-size:13px"></i> Ver
