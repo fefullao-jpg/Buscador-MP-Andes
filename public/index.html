@@ -97,6 +97,21 @@
     .chip-all { background: var(--teal); color: #fff; }
     .chip-cat { background: var(--navy); color: #fff; }
     .chip-opp { background: var(--amber); color: #fff; }
+    .chip-post { background: #7c3aed; color: #fff; }
+    .cat-item.post { border-color: rgba(124,58,237,.35); }
+    .cat-item.post.active { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+    .cat-item.post.active .cnt { background: rgba(255,255,255,.25); color: #fff; }
+    .btn-post { font-size: 11px; font-weight: 600; height: 30px; padding: 0 11px; border-radius: var(--rs); border: 1px solid #7c3aed; background: #fff; color: #7c3aed; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; flex-shrink: 0; }
+    .btn-post:hover { background: #f5f3ff; }
+    .btn-post.active { background: #7c3aed; color: #fff; }
+    .badge-res-pend { background: #fef9c3; color: #854d0e; }
+    .badge-res-gan  { background: #dcfce7; color: #166534; }
+    .badge-res-perd { background: #fee2e2; color: #991b1b; }
+    .post-panel { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 9px; margin-top: 4px; border-top: 1px dashed var(--border-md); }
+    .post-panel label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
+    .post-panel select, .post-panel input { height: 30px; border-radius: var(--rs); border: 1px solid var(--border-md); padding: 0 8px; font-size: 12px; background: var(--card); color: var(--text); }
+    .post-panel input { width: 120px; }
+    .post-panel select:focus, .post-panel input:focus { outline: none; border-color: #7c3aed; }
     .scroll { flex: 1; overflow-y: auto; padding: 16px 18px; }
     .results-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .results-count { font-size: 12px; color: var(--muted); }
@@ -174,6 +189,11 @@
           <span class="name">Guardadas</span>
           <span class="cnt" id="opp-cnt" style="display:none">0</span>
         </div>
+        <div class="cat-item post" id="post-item" onclick="selPost()" style="margin-top:3px">
+          <i class="ti ti-clipboard-check" style="font-size:15px;flex-shrink:0"></i>
+          <span class="name">Postuladas</span>
+          <span class="cnt" id="post-cnt" style="display:none">0</span>
+        </div>
       </div>
       <hr class="divider" />
       <div class="lbl">Categorías</div>
@@ -244,14 +264,16 @@
 const KEY_KEY    = 'mp_ca_key_v1';
 const BACKUP_KEY = 'mp_cats_backup';
 const OPP_BACKUP_KEY = 'mp_opp_backup';
+const POST_BACKUP_KEY = 'mp_post_backup';
 const VISTOS_BACKUP_KEY = 'mp_vistos_backup';
 const DEF_KEY    = '38366B56-462A-4B4F-9FEE-18F946D9F1B5';
 
 let cats          = [];
 let oportunidades = [];
+let postuladas    = [];
 let vistos        = [];
 let apiKey        = DEF_KEY;
-let activeCat     = null; // null = todas | número = índice de categoría | 'opp' = oportunidades
+let activeCat     = null; // null = todas | número = categoría | 'opp' = guardadas | 'post' = postuladas
 let allResults    = [];
 let allResultsLic = [];
 let fuente        = 'ca'; // 'ca' = Compra Ágil | 'lic' = Licitaciones
@@ -284,6 +306,7 @@ async function loadStorage() {
     else seedCats();
   }
   await loadOportunidades();
+  await loadPostuladas();
   await loadVistos();
   try { const s = localStorage.getItem(KEY_KEY); if(s) apiKey = s; } catch(e) {}
   document.getElementById('api-inp').value = apiKey;
@@ -328,6 +351,72 @@ async function saveOportunidades() {
     });
     try { localStorage.setItem(OPP_BACKUP_KEY, JSON.stringify(oportunidades)); } catch(e) {}
   } catch(e) {}
+}
+
+// ---- Postuladas (cotizaciones en que Andes Medikeep participó) ----
+async function loadPostuladas() {
+  try {
+    const res  = await fetch('/api/postuladas');
+    const data = await res.json();
+    if (data.items) {
+      postuladas = data.items;
+      try { localStorage.setItem(POST_BACKUP_KEY, JSON.stringify(postuladas)); } catch(e) {}
+    } else {
+      const backup = localStorage.getItem(POST_BACKUP_KEY);
+      if (backup) postuladas = JSON.parse(backup);
+    }
+  } catch(e) {
+    const backup = localStorage.getItem(POST_BACKUP_KEY);
+    if (backup) postuladas = JSON.parse(backup);
+  }
+}
+
+async function savePostuladas() {
+  try {
+    await fetch('/api/postuladas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: postuladas })
+    });
+    try { localStorage.setItem(POST_BACKUP_KEY, JSON.stringify(postuladas)); } catch(e) {}
+  } catch(e) {}
+}
+
+function isPostulada(codigo) { return postuladas.some(p => p.codigo === codigo); }
+
+function togglePostulada(codigo, e) {
+  if (e) e.stopPropagation();
+  const idx = postuladas.findIndex(p => p.codigo === codigo);
+  if (idx >= 0) {
+    postuladas.splice(idx, 1);
+  } else {
+    const item = currentResults().find(r => r.codigo === codigo) || postuladas.find(p => p.codigo === codigo);
+    if (item) postuladas.unshift({
+      ...item,
+      _postuladaAt: new Date().toISOString(),
+      _resultado: 'pendiente',
+      _precioOfertado: '',
+      _precioGanador: '',
+    });
+  }
+  savePostuladas();
+  renderPostCount();
+  renderVisible();
+}
+
+function setPostResultado(codigo, valor) {
+  const p = postuladas.find(x => x.codigo === codigo);
+  if (!p) return;
+  p._resultado = valor;
+  savePostuladas();
+  renderVisible();
+}
+
+function setPostPrecio(codigo, campo, valor) {
+  const p = postuladas.find(x => x.codigo === codigo);
+  if (!p) return;
+  p[campo] = valor;
+  savePostuladas(); // guarda sin re-render para no perder el foco del input
 }
 
 async function loadVistos() {
@@ -450,6 +539,8 @@ function selAll() { activeCat = null; renderAll(); updateScope(); renderVisible(
 
 function selOpp() { activeCat = (activeCat === 'opp') ? null : 'opp'; renderAll(); updateScope(); renderVisible(); }
 
+function selPost() { activeCat = (activeCat === 'post') ? null : 'post'; renderAll(); updateScope(); renderVisible(); }
+
 function addSub() {
   if (typeof activeCat !== 'number') return;
   const inp = document.getElementById('sub-inp');
@@ -474,7 +565,7 @@ function cntForCat(idx) {
   return res.filter(r => ws.includes(r._kw)).length;
 }
 
-function renderAll() { renderCatList(); renderSubArea(); renderOppCount(); }
+function renderAll() { renderCatList(); renderSubArea(); renderOppCount(); renderPostCount(); }
 
 function renderOppCount() {
   const cntEl = document.getElementById('opp-cnt');
@@ -484,6 +575,16 @@ function renderOppCount() {
   }
   const oppEl = document.getElementById('opp-item');
   if (oppEl) oppEl.classList.toggle('active', activeCat === 'opp');
+}
+
+function renderPostCount() {
+  const cntEl = document.getElementById('post-cnt');
+  if (cntEl) {
+    cntEl.style.display = postuladas.length ? '' : 'none';
+    cntEl.textContent   = postuladas.length;
+  }
+  const postEl = document.getElementById('post-item');
+  if (postEl) postEl.classList.toggle('active', activeCat === 'post');
 }
 
 function renderCatList() {
@@ -545,6 +646,9 @@ function updateScope() {
   if (activeCat === 'opp') {
     bar.innerHTML = `<i class="ti ti-star" style="font-size:14px;flex-shrink:0"></i>
       <span class="chip chip-opp">Oportunidades guardadas</span> · ${oportunidades.length} marcada${oportunidades.length !== 1 ? 's' : ''}`;
+  } else if (activeCat === 'post') {
+    bar.innerHTML = `<i class="ti ti-clipboard-check" style="font-size:14px;flex-shrink:0"></i>
+      <span class="chip chip-post">Postuladas</span> · ${postuladas.length} cotización${postuladas.length !== 1 ? 'es' : ''}`;
   } else if (activeCat === null) {
     bar.innerHTML = `${src} <i class="ti ti-layout-grid" style="font-size:14px;flex-shrink:0"></i>
       <span class="chip chip-all">Todas las categorías</span> · mayor monto primero`;
@@ -597,6 +701,7 @@ function renderCard(item) {
     : `https://compra-agil.mercadopublico.cl/resumen-cotizacion/${encodeURIComponent(codigo)}`;
   const catN   = catFor(item._kw);
   const marcada = isOpp(codigo);
+  const postulada = isPostulada(codigo);
   const visto   = esVisto(codigo);
   const esNuevo = esNuevoEnBarrido(codigo);
   return `<div class="card${marcada ? ' is-opp' : ''}">
@@ -628,7 +733,65 @@ function renderCard(item) {
         <button class="btn-star${marcada ? ' active' : ''}" onclick="toggleOpp('${codigo.replace(/'/g,"\\'")}', event)" title="${marcada ? 'Quitar de Oportunidades' : 'Marcar como oportunidad'}">
           <i class="ti ${marcada ? 'ti-star-filled' : 'ti-star'}"></i>
         </button>
+        <button class="btn-post${postulada ? ' active' : ''}" onclick="togglePostulada('${codigo.replace(/'/g,"\\'")}', event)" title="${postulada ? 'Quitar de Postuladas' : 'Marcar como postulada'}">
+          <i class="ti ti-clipboard-check" style="font-size:13px"></i> ${postulada ? 'Postulada ✓' : 'Postulada'}
+        </button>
         <a class="link-ver" href="${url}" target="_blank" rel="noopener" onclick="marcarVisto('${codigo.replace(/'/g,"\\'")}')">
+          <i class="ti ti-external-link" style="font-size:13px"></i> Ver
+        </a>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderPostuladaCard(item) {
+  const estado = item.estado?.codigo || '';
+  const nombre = item.nombre || 'Sin título';
+  const org    = item.institucion?.organismo_comprador || '—';
+  const monto  = fmtMonto(item.montos?.monto_disponible_clp);
+  const fecha  = fmtFecha(item.fechas?.fecha_cierre);
+  const codigo = item.codigo || '—';
+  const url    = item._tipo === 'lic'
+    ? `https://www.mercadopublico.cl/Procurement/Modules/RFB/DetailsAcquisition.aspx?idlicitacion=${encodeURIComponent(codigo)}`
+    : `https://compra-agil.mercadopublico.cl/resumen-cotizacion/${encodeURIComponent(codigo)}`;
+  const res  = item._resultado || 'pendiente';
+  const resBadge = res === 'ganada' ? ['badge-res-gan','Ganada']
+                 : res === 'perdida' ? ['badge-res-perd','Perdida']
+                 : ['badge-res-pend','Pendiente'];
+  const cod = codigo.replace(/'/g,"\\'");
+  return `<div class="card">
+    <div class="card-top">
+      <div class="card-title">${nombre}</div>
+      <span class="badge ${resBadge[0]}">${resBadge[1]}</span>
+      ${badgeEstado(estado)}
+    </div>
+    <div class="card-grid">
+      <div class="field"><div class="flbl">Organismo</div><div class="fval">${org}</div></div>
+      <div class="field"><div class="flbl">Monto estimado</div><div class="fval monto">${monto}</div></div>
+      <div class="field"><div class="flbl">Cierre</div><div class="fval ${fecha.cls}">${fecha.text}</div></div>
+    </div>
+    <div class="post-panel">
+      <label>Resultado</label>
+      <select onchange="setPostResultado('${cod}', this.value)">
+        <option value="pendiente"${res==='pendiente'?' selected':''}>Pendiente</option>
+        <option value="ganada"${res==='ganada'?' selected':''}>Ganada</option>
+        <option value="perdida"${res==='perdida'?' selected':''}>Perdida</option>
+      </select>
+      <label>Ofertado</label>
+      <input type="number" placeholder="$ neto" value="${item._precioOfertado ?? ''}" oninput="setPostPrecio('${cod}','_precioOfertado', this.value)" />
+      <label>Ganador</label>
+      <input type="number" placeholder="$ neto" value="${item._precioGanador ?? ''}" oninput="setPostPrecio('${cod}','_precioGanador', this.value)" />
+    </div>
+    <div class="card-foot">
+      <div class="pills">
+        <span class="pill-cat">${catFor(item._kw)}</span>
+        <span class="pill-cod">${codigo}</span>
+      </div>
+      <div class="card-actions">
+        <button class="btn-post active" onclick="togglePostulada('${cod}', event)" title="Quitar de Postuladas">
+          <i class="ti ti-trash" style="font-size:13px"></i> Quitar
+        </button>
+        <a class="link-ver" href="${url}" target="_blank" rel="noopener">
           <i class="ti ti-external-link" style="font-size:13px"></i> Ver
         </a>
       </div>
@@ -641,6 +804,8 @@ function renderVisible() {
   let vis;
   if (activeCat === 'opp') {
     vis = oportunidades;
+  } else if (activeCat === 'post') {
+    vis = postuladas;
   } else {
     const base = currentResults();
     if (typeof activeCat === 'number') {
@@ -661,6 +826,8 @@ function renderVisible() {
     let msg;
     if (activeCat === 'opp') {
       msg = 'Aún no has marcado ninguna oportunidad. Usa la estrella en cada resultado para guardarla aquí.';
+    } else if (activeCat === 'post') {
+      msg = 'Aún no has marcado cotizaciones como postuladas. Usa el botón "Postulada" en cada resultado.';
     } else if (fuente === 'lic' && !licBuscada) {
       msg = 'Presiona "Buscar licitaciones" para buscar tus categorías en licitaciones públicas.';
     } else {
@@ -669,13 +836,16 @@ function renderVisible() {
     el.innerHTML = `<div class="empty"><i class="ti ti-search-off"></i>${msg}</div>`;
     return;
   }
-  const sortLabel = activeCat === 'opp' ? 'Guardadas' : 'Más reciente primero';
+  const sortLabel = activeCat === 'opp' ? 'Guardadas'
+                  : activeCat === 'post' ? 'Postuladas'
+                  : 'Más reciente primero';
+  const cardFn = activeCat === 'post' ? renderPostuladaCard : renderCard;
   el.innerHTML =
     `<div class="results-meta">
       <span class="results-count">${vis.length} resultado${vis.length !== 1 ? 's' : ''}</span>
       <span class="sort-lbl"><i class="ti ti-arrow-down" style="font-size:11px"></i> ${sortLabel}</span>
     </div>` +
-    vis.map(renderCard).join('');
+    vis.map(cardFn).join('');
 }
 
 async function buscarTodo() {
