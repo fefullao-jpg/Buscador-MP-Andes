@@ -17,7 +17,7 @@ function tipoOcLabel(t) {
 
 // La API de ChileCompra falla de forma intermitente (timeouts/errores transitorios)
 // bajo concurrencia. Reintenta antes de descartar el dia u OC.
-async function fetchRetry(url, tries = 3) {
+async function fetchRetry(url, tries = 5) {
   let lastErr;
   for (let i = 0; i < tries; i++) {
     try {
@@ -27,7 +27,7 @@ async function fetchRetry(url, tries = 3) {
     } catch (e) {
       lastErr = e;
     }
-    if (i < tries - 1) await new Promise(res => setTimeout(res, 300 + i * 300));
+    if (i < tries - 1) await new Promise(res => setTimeout(res, 500 * Math.pow(1.8, i)));
   }
   throw lastErr;
 }
@@ -73,7 +73,7 @@ export default async function handler(req, res) {
   try {
     const matches = [];
     const diasFallidos = [];
-    await pLimitAll(fechas, 8, async (fecha) => {
+    await pLimitAll(fechas, 3, async (fecha) => {
       try {
         const r = await fetchRetry(`${BASE}?fecha=${fecha}&ticket=${TICKET}`);
         const data = await r.json();
@@ -89,7 +89,7 @@ export default async function handler(req, res) {
 
     const filas = [];
     const ocFallidas = [];
-    await pLimitAll(matches, 8, async (m) => {
+    await pLimitAll(matches, 3, async (m) => {
       try {
         const r = await fetchRetry(`${BASE}?codigo=${encodeURIComponent(m.Codigo)}&ticket=${TICKET}`);
         const data = await r.json();
