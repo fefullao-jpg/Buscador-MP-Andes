@@ -137,9 +137,10 @@ export default async function handler(req, res) {
       ws.getCell('C20').value = codigo;                  // ID de la solicitud
       // C21 (vigencia) se mantiene tal cual viene en la plantilla
 
-      // Detalle de productos en blanco para completar a mano. Las fórmulas de
+      // Detalle de productos en blanco para completar a mano (tabla en columnas
+      // B-F: N°, Descripción, Cantidad, Precio Unitario, Subtotal). Las fórmulas de
       // subtotal, neto, IVA y total se conservan intactas.
-      ['D25', 'E25', 'F25'].forEach(ref => { ws.getCell(ref).value = null; });
+      ['C25', 'D25', 'E25'].forEach(ref => { ws.getCell(ref).value = null; });
 
       ws.getCell('C32').value = null;                    // Plazo de entrega: manual
       if (info.direccionEntrega) {
