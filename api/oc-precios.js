@@ -1,6 +1,8 @@
 // api/oc-precios.js — Barrido de Órdenes de Compra por rango de días y palabras clave.
 // Devuelve las filas de precio ya resueltas (producto, precio unitario, cantidad,
-// comprador, vendedor, fecha, tipo, código) en formato compacto.
+// comprador, vendedor, fecha, tipo, codigo OC, codigo de licitacion/compra agil origen)
+// en formato compacto. Reintenta cada llamada porque la API de Mercado Publico falla
+// de forma intermitente bajo concurrencia.
 export const config = { maxDuration: 60 };
 
 const TICKET = process.env.MP_TICKET || '38366B56-462A-4B4F-9FEE-18F946D9F1B5';
@@ -13,11 +15,41 @@ function tipoOcLabel(t) {
   return map[t] || (t || '—');
 }
 
+// La API de ChileCompra falla de forma intermitente (timeouts/errores transitorios)
+// bajo concurrencia. Reintenta antes de descartar el dia u OC.
+async function fetchRetry(url, tries = 3) {
+  let lastErr;
+  for (let i = 0; i < tries; i++) {
+    try {
+      const r = await fetch(url);
+      if (r.ok) return r;
+      lastErr = new Error(`HTTP ${r.status}`);
+    } catch (e) {
+      lastErr = e;
+    }
+    if (i < tries - 1) await new Promise(res => setTimeout(res, 300 + i * 300));
+  }
+  throw lastErr;
+}
+
 async function pLimitAll(items, limit, worker) {
   let i = 0; const results = [];
   async function next() { while (i < items.length) { const idx = i++; results[idx] = await worker(items[idx], idx); } }
   await Promise.all(Array(Math.min(limit, items.length)).fill(0).map(next));
   return results;
+}
+
+// Intenta identificar el codigo de la licitacion/compra agil que origino la OC.
+// El campo CodigoLicitacion suele venir poblado para licitaciones; para Compra Agil
+// suele venir vacio, pero el codigo de la solicitud (formato ...-COT##) a veces
+// aparece mencionado dentro del texto libre de Descripcion.
+function codigoProceso(d) {
+  if (d.CodigoLicitacion) return d.CodigoLicitacion;
+  const texto = d.Descripcion || '';
+  const re = /\b\d{2,7}-\d{1,6}-(COT|AG|LE|LP|LQ|LR|LS|L1|CM|E2|TD)\d{2}\b/gi;
+  const encontrados = texto.match(re) || [];
+  const distinto = encontrados.find(c => c.toUpperCase() !== (d.Codigo || '').toUpperCase());
+  return distinto || '';
 }
 
 export default async function handler(req, res) {
@@ -40,10 +72,10 @@ export default async function handler(req, res) {
 
   try {
     const matches = [];
-    await pLimitAll(fechas, 10, async (fecha) => {
+    const diasFallidos = [];
+    await pLimitAll(fechas, 8, async (fecha) => {
       try {
-        const r = await fetch(`${BASE}?fecha=${fecha}&ticket=${TICKET}`);
-        if (!r.ok) return;
+        const r = await fetchRetry(`${BASE}?fecha=${fecha}&ticket=${TICKET}`);
         const data = await r.json();
         (data.Listado || []).forEach(item => {
           const titulo = (item.Nombre || '').toLowerCase();
@@ -52,17 +84,18 @@ export default async function handler(req, res) {
           ));
           if (ok && !matches.find(m => m.Codigo === item.Codigo)) matches.push({ Codigo: item.Codigo });
         });
-      } catch (e) {}
+      } catch (e) { diasFallidos.push(fecha); }
     });
 
     const filas = [];
-    await pLimitAll(matches, 10, async (m) => {
+    const ocFallidas = [];
+    await pLimitAll(matches, 8, async (m) => {
       try {
-        const r = await fetch(`${BASE}?codigo=${encodeURIComponent(m.Codigo)}&ticket=${TICKET}`);
-        if (!r.ok) return;
+        const r = await fetchRetry(`${BASE}?codigo=${encodeURIComponent(m.Codigo)}&ticket=${TICKET}`);
         const data = await r.json();
         const d = (data.Listado && data.Listado[0]) || null;
         if (!d?.Items?.Listado?.length) return;
+        const proceso = codigoProceso(d);
         d.Items.Listado.forEach(it => {
           filas.push([
             it.EspecificacionProveedor || it.EspecificacionComprador || it.Producto || d.Nombre || '',
@@ -73,12 +106,20 @@ export default async function handler(req, res) {
             (d.Fechas?.FechaAceptacion || d.Fechas?.FechaCreacion || '').slice(0, 10),
             tipoOcLabel(d.Tipo),
             d.Codigo || '',
+            proceso,
           ]);
         });
-      } catch (e) {}
+      } catch (e) { ocFallidas.push(m.Codigo); }
     });
 
-    return res.status(200).json({ dias: fechas.length, coincidencias: matches.length, codigos: matches.map(m => m.Codigo), filas });
+    return res.status(200).json({
+      dias: fechas.length,
+      diasFallidos,
+      coincidencias: matches.length,
+      codigos: matches.map(m => m.Codigo),
+      ocFallidas,
+      filas,
+    });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
