@@ -78,7 +78,7 @@ export default async function handler(req, res) {
       } catch (e) {}
     });
 
-    return res.status(200).json({ dias: fechas.length, coincidencias: matches.length, filas });
+    return res.status(200).json({ dias: fechas.length, coincidencias: matches.length, codigos: matches.map(m => m.Codigo), filas });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
