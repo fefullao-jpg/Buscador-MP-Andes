@@ -852,6 +852,23 @@ function generarExcelPrecios(nombreCat, filas) {
   XLSX.writeFile(wb, fname);
 }
 
+// La API de Mercado Publico falla de forma intermitente. Reintenta con backoff
+// antes de dar por perdido un dia o una OC (evita que se pierdan resultados en silencio).
+async function fetchJSONRetry(url, tries = 3) {
+  let lastErr;
+  for (let i = 0; i < tries; i++) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      lastErr = e;
+      if (i < tries - 1) await new Promise(r => setTimeout(r, 400 * (i + 1)));
+    }
+  }
+  throw lastErr;
+}
+
 async function descargarPrecios(idx) {
   if (typeof idx !== 'number' || !cats[idx]) return;
   const cat      = cats[idx];
@@ -877,27 +894,27 @@ async function descargarPrecios(idx) {
 
   const palabras = encodeURIComponent(allWords.join('|'));
   const matches = [];
+  const diasFallidos = [];
   let doneDias = 0;
 
   function renderProgresoDias() {
     el.innerHTML = `<div class="progress-wrap">
       <div>Revisando compras de <strong>${cat.name}</strong> · día <strong>${doneDias}</strong> de <strong>${DIAS}</strong> (≈18 meses)</div>
       <div class="prog-track"><div class="prog-fill" style="width:${Math.round((doneDias / DIAS) * 100)}%"></div></div>
-      <div style="margin-top:6px;font-size:11px">${matches.length} coincidencias encontradas hasta ahora</div>
+      <div style="margin-top:6px;font-size:11px">${matches.length} coincidencias encontradas hasta ahora${diasFallidos.length ? ` · ${diasFallidos.length} día(s) con error` : ''}</div>
     </div>`;
   }
   renderProgresoDias();
 
   await pLimitAll(fechas, 8, async (fecha) => {
     try {
-      const res  = await fetch(`/api/oc-lista?fecha=${fecha}&palabras=${palabras}`);
-      const data = await res.json();
+      const data = await fetchJSONRetry(`/api/oc-lista?fecha=${fecha}&palabras=${palabras}`, 3);
       if (data.matches) {
         data.matches.forEach(m => {
           if (!matches.find(x => x.Codigo === m.Codigo)) matches.push(m);
         });
       }
-    } catch (e) { /* se ignora el día con error y se sigue */ }
+    } catch (e) { diasFallidos.push(fecha); }
     doneDias++;
     if (doneDias % 4 === 0 || doneDias === DIAS) renderProgresoDias();
   });
@@ -910,6 +927,7 @@ async function descargarPrecios(idx) {
   }
 
   const filas = [];
+  const ocFallidas = [];
   let doneDet = 0;
 
   function renderProgresoDetalle() {
@@ -922,8 +940,7 @@ async function descargarPrecios(idx) {
 
   await pLimitAll(matches, 6, async (m) => {
     try {
-      const res  = await fetch(`/api/oc-detalle?codigo=${encodeURIComponent(m.Codigo)}`);
-      const data = await res.json();
+      const data = await fetchJSONRetry(`/api/oc-detalle?codigo=${encodeURIComponent(m.Codigo)}`, 3);
       const d    = data.item;
       if (d?.Items?.Listado?.length) {
         d.Items.Listado.forEach(it => {
@@ -939,7 +956,7 @@ async function descargarPrecios(idx) {
           });
         });
       }
-    } catch (e) { /* se ignora la OC con error y se sigue */ }
+    } catch (e) { ocFallidas.push(m.Codigo); }
     doneDet++;
     if (doneDet % 3 === 0 || doneDet === matches.length) renderProgresoDetalle();
   });
@@ -955,6 +972,9 @@ async function descargarPrecios(idx) {
   generarExcelPrecios(cat.name, filas);
 
   if (btn) btn.disabled = false;
+  if (diasFallidos.length || ocFallidas.length) {
+    console.warn(`Precios ${cat.name}: ${diasFallidos.length} día(s) y ${ocFallidas.length} OC(s) no se pudieron consultar tras reintentar (posible resultado incompleto).`, { diasFallidos, ocFallidas });
+  }
   renderVisible();
 }
 
