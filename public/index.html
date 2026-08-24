@@ -97,21 +97,6 @@
     .chip-all { background: var(--teal); color: #fff; }
     .chip-cat { background: var(--navy); color: #fff; }
     .chip-opp { background: var(--amber); color: #fff; }
-    .chip-post { background: #7c3aed; color: #fff; }
-    .cat-item.post { border-color: rgba(124,58,237,.35); }
-    .cat-item.post.active { background: #7c3aed; border-color: #7c3aed; color: #fff; }
-    .cat-item.post.active .cnt { background: rgba(255,255,255,.25); color: #fff; }
-    .btn-post { font-size: 11px; font-weight: 600; height: 30px; padding: 0 11px; border-radius: var(--rs); border: 1px solid #7c3aed; background: #fff; color: #7c3aed; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; flex-shrink: 0; }
-    .btn-post:hover { background: #f5f3ff; }
-    .btn-post.active { background: #7c3aed; color: #fff; }
-    .badge-res-pend { background: #fef9c3; color: #854d0e; }
-    .badge-res-gan  { background: #dcfce7; color: #166534; }
-    .badge-res-perd { background: #fee2e2; color: #991b1b; }
-    .post-panel { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 9px; margin-top: 4px; border-top: 1px dashed var(--border-md); }
-    .post-panel label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
-    .post-panel select, .post-panel input { height: 30px; border-radius: var(--rs); border: 1px solid var(--border-md); padding: 0 8px; font-size: 12px; background: var(--card); color: var(--text); }
-    .post-panel input { width: 120px; }
-    .post-panel select:focus, .post-panel input:focus { outline: none; border-color: #7c3aed; }
     .scroll { flex: 1; overflow-y: auto; padding: 16px 18px; }
     .results-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .results-count { font-size: 12px; color: var(--muted); }
@@ -128,9 +113,8 @@
     .badge-des  { background: #fef9c3; color: #854d0e; }
     .badge-canc { background: #fee2e2; color: #991b1b; }
     .badge-sel  { background: #eff6ff; color: #1d4ed8; }
-    .badge-sinabrir { background: var(--teal); color: #fff; }
-    .badge-abierto { background: #f1f5f9; color: #94a3b8; }
-    .badge-recien { background: #16a34a; color: #fff; }
+    .badge-nuevo { background: var(--teal); color: #fff; }
+    .badge-leido { background: #f1f5f9; color: #94a3b8; }
     .card-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     .field .flbl { font-size: 10px; color: var(--muted); margin-bottom: 3px; text-transform: uppercase; letter-spacing: .04em; }
     .field .fval { font-size: 12px; font-weight: 500; }
@@ -147,16 +131,13 @@
     .btn-star:hover { border-color: var(--amber); color: var(--amber); }
     .btn-star.active { background: var(--amber); border-color: var(--amber); color: #fff; }
     .btn-star.active:hover { background: var(--amber-h); border-color: var(--amber-h); color: #fff; }
-    .btn-cotiz { font-size: 11px; font-weight: 600; height: 30px; padding: 0 11px; border-radius: var(--rs); border: 1px solid var(--navy); background: var(--navy); color: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; flex-shrink: 0; }
-    .btn-cotiz:hover { background: var(--navy-h); }
-    .btn-cotiz.emc { background: var(--teal); border-color: var(--teal); }
-    .btn-cotiz.emc:hover { background: var(--teal-h); border-color: var(--teal-h); }
     .link-ver { font-size: 12px; color: var(--teal); text-decoration: none; display: inline-flex; align-items: center; gap: 3px; font-weight: 500; white-space: nowrap; }
     .link-ver:hover { text-decoration: underline; }
     .empty { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 13px; }
     .empty i { font-size: 36px; color: var(--teal); display: block; margin-bottom: 12px; }
     .spinner { text-align: center; padding: 50px; color: var(--muted); font-size: 13px; }
-    .spinner i { font-size: 28px; display: block; margin-bottom: 10px; }
+    .spinner i { font-size: 28px; display: block; margin-bottom: 10px; animation: spin .8s linear infinite; }
+    @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
     .progress-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; text-align: center; font-size: 13px; color: var(--muted); }
     .prog-track { height: 5px; background: var(--border); border-radius: 3px; margin: 12px 0 6px; overflow: hidden; }
     .prog-fill  { height: 5px; background: var(--teal); border-radius: 3px; transition: width .3s; }
@@ -188,11 +169,6 @@
           <i class="ti ti-star" style="font-size:15px;flex-shrink:0"></i>
           <span class="name">Guardadas</span>
           <span class="cnt" id="opp-cnt" style="display:none">0</span>
-        </div>
-        <div class="cat-item post" id="post-item" onclick="selPost()" style="margin-top:3px">
-          <i class="ti ti-clipboard-check" style="font-size:15px;flex-shrink:0"></i>
-          <span class="name">Postuladas</span>
-          <span class="cnt" id="post-cnt" style="display:none">0</span>
         </div>
       </div>
       <hr class="divider" />
@@ -264,16 +240,14 @@
 const KEY_KEY    = 'mp_ca_key_v1';
 const BACKUP_KEY = 'mp_cats_backup';
 const OPP_BACKUP_KEY = 'mp_opp_backup';
-const POST_BACKUP_KEY = 'mp_post_backup';
 const VISTOS_BACKUP_KEY = 'mp_vistos_backup';
 const DEF_KEY    = '38366B56-462A-4B4F-9FEE-18F946D9F1B5';
 
 let cats          = [];
 let oportunidades = [];
-let postuladas    = [];
 let vistos        = [];
 let apiKey        = DEF_KEY;
-let activeCat     = null; // null = todas | número = categoría | 'opp' = guardadas | 'post' = postuladas
+let activeCat     = null; // null = todas | número = índice de categoría | 'opp' = oportunidades
 let allResults    = [];
 let allResultsLic = [];
 let fuente        = 'ca'; // 'ca' = Compra Ágil | 'lic' = Licitaciones
@@ -306,7 +280,6 @@ async function loadStorage() {
     else seedCats();
   }
   await loadOportunidades();
-  await loadPostuladas();
   await loadVistos();
   try { const s = localStorage.getItem(KEY_KEY); if(s) apiKey = s; } catch(e) {}
   document.getElementById('api-inp').value = apiKey;
@@ -353,72 +326,6 @@ async function saveOportunidades() {
   } catch(e) {}
 }
 
-// ---- Postuladas (cotizaciones en que Andes Medikeep participó) ----
-async function loadPostuladas() {
-  try {
-    const res  = await fetch('/api/postuladas');
-    const data = await res.json();
-    if (data.items) {
-      postuladas = data.items;
-      try { localStorage.setItem(POST_BACKUP_KEY, JSON.stringify(postuladas)); } catch(e) {}
-    } else {
-      const backup = localStorage.getItem(POST_BACKUP_KEY);
-      if (backup) postuladas = JSON.parse(backup);
-    }
-  } catch(e) {
-    const backup = localStorage.getItem(POST_BACKUP_KEY);
-    if (backup) postuladas = JSON.parse(backup);
-  }
-}
-
-async function savePostuladas() {
-  try {
-    await fetch('/api/postuladas', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items: postuladas })
-    });
-    try { localStorage.setItem(POST_BACKUP_KEY, JSON.stringify(postuladas)); } catch(e) {}
-  } catch(e) {}
-}
-
-function isPostulada(codigo) { return postuladas.some(p => p.codigo === codigo); }
-
-function togglePostulada(codigo, e) {
-  if (e) e.stopPropagation();
-  const idx = postuladas.findIndex(p => p.codigo === codigo);
-  if (idx >= 0) {
-    postuladas.splice(idx, 1);
-  } else {
-    const item = currentResults().find(r => r.codigo === codigo) || postuladas.find(p => p.codigo === codigo);
-    if (item) postuladas.unshift({
-      ...item,
-      _postuladaAt: new Date().toISOString(),
-      _resultado: 'pendiente',
-      _precioOfertado: '',
-      _precioGanador: '',
-    });
-  }
-  savePostuladas();
-  renderPostCount();
-  renderVisible();
-}
-
-function setPostResultado(codigo, valor) {
-  const p = postuladas.find(x => x.codigo === codigo);
-  if (!p) return;
-  p._resultado = valor;
-  savePostuladas();
-  renderVisible();
-}
-
-function setPostPrecio(codigo, campo, valor) {
-  const p = postuladas.find(x => x.codigo === codigo);
-  if (!p) return;
-  p[campo] = valor;
-  savePostuladas(); // guarda sin re-render para no perder el foco del input
-}
-
 async function loadVistos() {
   try {
     const res  = await fetch('/api/vistos');
@@ -448,27 +355,6 @@ async function saveVistos() {
 }
 
 function esVisto(codigo) { return vistos.includes(codigo); }
-
-// "Nuevo" (por barrido) es 100% local a este navegador — no se guarda en Redis ni se
-// comparte entre dispositivos/usuarios. Cada persona ve sus propias novedades.
-const NUEVO_BARRIDO_KEY = 'mp_ultimo_barrido_ca';
-let nuevosEnBarrido = new Set();
-
-function esNuevoEnBarrido(codigo) { return nuevosEnBarrido.has(codigo); }
-
-function actualizarNuevosEnBarrido(codigos) {
-  let anterior = null;
-  try {
-    const raw = localStorage.getItem(NUEVO_BARRIDO_KEY);
-    if (raw) anterior = JSON.parse(raw);
-  } catch (e) {}
-  nuevosEnBarrido = new Set();
-  if (anterior) {
-    const prevSet = new Set(anterior);
-    codigos.forEach(c => { if (!prevSet.has(c)) nuevosEnBarrido.add(c); });
-  }
-  try { localStorage.setItem(NUEVO_BARRIDO_KEY, JSON.stringify(codigos)); } catch (e) {}
-}
 
 function marcarVisto(codigo) {
   if (vistos.includes(codigo)) return;
@@ -539,8 +425,6 @@ function selAll() { activeCat = null; renderAll(); updateScope(); renderVisible(
 
 function selOpp() { activeCat = (activeCat === 'opp') ? null : 'opp'; renderAll(); updateScope(); renderVisible(); }
 
-function selPost() { activeCat = (activeCat === 'post') ? null : 'post'; renderAll(); updateScope(); renderVisible(); }
-
 function addSub() {
   if (typeof activeCat !== 'number') return;
   const inp = document.getElementById('sub-inp');
@@ -565,7 +449,7 @@ function cntForCat(idx) {
   return res.filter(r => ws.includes(r._kw)).length;
 }
 
-function renderAll() { renderCatList(); renderSubArea(); renderOppCount(); renderPostCount(); }
+function renderAll() { renderCatList(); renderSubArea(); renderOppCount(); }
 
 function renderOppCount() {
   const cntEl = document.getElementById('opp-cnt');
@@ -575,16 +459,6 @@ function renderOppCount() {
   }
   const oppEl = document.getElementById('opp-item');
   if (oppEl) oppEl.classList.toggle('active', activeCat === 'opp');
-}
-
-function renderPostCount() {
-  const cntEl = document.getElementById('post-cnt');
-  if (cntEl) {
-    cntEl.style.display = postuladas.length ? '' : 'none';
-    cntEl.textContent   = postuladas.length;
-  }
-  const postEl = document.getElementById('post-item');
-  if (postEl) postEl.classList.toggle('active', activeCat === 'post');
 }
 
 function renderCatList() {
@@ -635,7 +509,7 @@ function renderSubArea() {
       <button class="btn-add-sw" onclick="addSub()" aria-label="Agregar">+</button>
     </div>
     <button class="btn-precios" id="btn-precios" onclick="descargarPrecios(${activeCat})">
-      <i class="ti ti-file-spreadsheet"></i> Precios de referencia (Excel, 9 meses)
+      <i class="ti ti-file-spreadsheet"></i> Precios de referencia (Excel, 18 meses)
     </button>
   </div>`;
 }
@@ -646,9 +520,6 @@ function updateScope() {
   if (activeCat === 'opp') {
     bar.innerHTML = `<i class="ti ti-star" style="font-size:14px;flex-shrink:0"></i>
       <span class="chip chip-opp">Oportunidades guardadas</span> · ${oportunidades.length} marcada${oportunidades.length !== 1 ? 's' : ''}`;
-  } else if (activeCat === 'post') {
-    bar.innerHTML = `<i class="ti ti-clipboard-check" style="font-size:14px;flex-shrink:0"></i>
-      <span class="chip chip-post">Postuladas</span> · ${postuladas.length} cotización${postuladas.length !== 1 ? 'es' : ''}`;
   } else if (activeCat === null) {
     bar.innerHTML = `${src} <i class="ti ti-layout-grid" style="font-size:14px;flex-shrink:0"></i>
       <span class="chip chip-all">Todas las categorías</span> · mayor monto primero`;
@@ -701,14 +572,11 @@ function renderCard(item) {
     : `https://compra-agil.mercadopublico.cl/resumen-cotizacion/${encodeURIComponent(codigo)}`;
   const catN   = catFor(item._kw);
   const marcada = isOpp(codigo);
-  const postulada = isPostulada(codigo);
   const visto   = esVisto(codigo);
-  const esNuevo = esNuevoEnBarrido(codigo);
   return `<div class="card${marcada ? ' is-opp' : ''}">
     <div class="card-top">
       <div class="card-title${visto ? ' visto' : ''}">${nombre}</div>
-      ${esNuevo ? '<span class="badge badge-recien">Nuevo</span>' : ''}
-      <span class="badge ${visto ? 'badge-abierto' : 'badge-sinabrir'}">${visto ? 'Abierto' : 'Sin abrir'}</span>
+      <span class="badge ${visto ? 'badge-leido' : 'badge-nuevo'}">${visto ? 'Leído' : 'Nuevo'}</span>
       ${badgeEstado(estado)}
     </div>
     <div class="card-grid">
@@ -724,74 +592,10 @@ function renderCard(item) {
         <span class="pill-cod">${codigo}</span>
       </div>
       <div class="card-actions">
-        <button class="btn-cotiz" onclick="generarCotizacion('${codigo.replace(/'/g,"\\'")}', '${item._tipo === 'lic' ? 'lic' : 'ca'}', event)" title="Generar Cotización Andes Medikeep en Excel">
-          <i class="ti ti-file-spreadsheet" style="font-size:13px"></i> COT AMK
-        </button>
-        <button class="btn-cotiz emc" onclick="generarCotizacion('${codigo.replace(/'/g,"\\'")}', '${item._tipo === 'lic' ? 'lic' : 'ca'}', event, 'emc')" title="Generar Cotización EM CHILE en Excel">
-          <i class="ti ti-file-spreadsheet" style="font-size:13px"></i> COT EMC
-        </button>
         <button class="btn-star${marcada ? ' active' : ''}" onclick="toggleOpp('${codigo.replace(/'/g,"\\'")}', event)" title="${marcada ? 'Quitar de Oportunidades' : 'Marcar como oportunidad'}">
           <i class="ti ${marcada ? 'ti-star-filled' : 'ti-star'}"></i>
         </button>
-        <button class="btn-post${postulada ? ' active' : ''}" onclick="togglePostulada('${codigo.replace(/'/g,"\\'")}', event)" title="${postulada ? 'Quitar de Postuladas' : 'Marcar como postulada'}">
-          <i class="ti ti-clipboard-check" style="font-size:13px"></i> ${postulada ? 'Postulada ✓' : 'Postulada'}
-        </button>
         <a class="link-ver" href="${url}" target="_blank" rel="noopener" onclick="marcarVisto('${codigo.replace(/'/g,"\\'")}')">
-          <i class="ti ti-external-link" style="font-size:13px"></i> Ver
-        </a>
-      </div>
-    </div>
-  </div>`;
-}
-
-function renderPostuladaCard(item) {
-  const estado = item.estado?.codigo || '';
-  const nombre = item.nombre || 'Sin título';
-  const org    = item.institucion?.organismo_comprador || '—';
-  const monto  = fmtMonto(item.montos?.monto_disponible_clp);
-  const fecha  = fmtFecha(item.fechas?.fecha_cierre);
-  const codigo = item.codigo || '—';
-  const url    = item._tipo === 'lic'
-    ? `https://www.mercadopublico.cl/Procurement/Modules/RFB/DetailsAcquisition.aspx?idlicitacion=${encodeURIComponent(codigo)}`
-    : `https://compra-agil.mercadopublico.cl/resumen-cotizacion/${encodeURIComponent(codigo)}`;
-  const res  = item._resultado || 'pendiente';
-  const resBadge = res === 'ganada' ? ['badge-res-gan','Ganada']
-                 : res === 'perdida' ? ['badge-res-perd','Perdida']
-                 : ['badge-res-pend','Pendiente'];
-  const cod = codigo.replace(/'/g,"\\'");
-  return `<div class="card">
-    <div class="card-top">
-      <div class="card-title">${nombre}</div>
-      <span class="badge ${resBadge[0]}">${resBadge[1]}</span>
-      ${badgeEstado(estado)}
-    </div>
-    <div class="card-grid">
-      <div class="field"><div class="flbl">Organismo</div><div class="fval">${org}</div></div>
-      <div class="field"><div class="flbl">Monto estimado</div><div class="fval monto">${monto}</div></div>
-      <div class="field"><div class="flbl">Cierre</div><div class="fval ${fecha.cls}">${fecha.text}</div></div>
-    </div>
-    <div class="post-panel">
-      <label>Resultado</label>
-      <select onchange="setPostResultado('${cod}', this.value)">
-        <option value="pendiente"${res==='pendiente'?' selected':''}>Pendiente</option>
-        <option value="ganada"${res==='ganada'?' selected':''}>Ganada</option>
-        <option value="perdida"${res==='perdida'?' selected':''}>Perdida</option>
-      </select>
-      <label>Ofertado</label>
-      <input type="number" placeholder="$ neto" value="${item._precioOfertado ?? ''}" oninput="setPostPrecio('${cod}','_precioOfertado', this.value)" />
-      <label>Ganador</label>
-      <input type="number" placeholder="$ neto" value="${item._precioGanador ?? ''}" oninput="setPostPrecio('${cod}','_precioGanador', this.value)" />
-    </div>
-    <div class="card-foot">
-      <div class="pills">
-        <span class="pill-cat">${catFor(item._kw)}</span>
-        <span class="pill-cod">${codigo}</span>
-      </div>
-      <div class="card-actions">
-        <button class="btn-post active" onclick="togglePostulada('${cod}', event)" title="Quitar de Postuladas">
-          <i class="ti ti-trash" style="font-size:13px"></i> Quitar
-        </button>
-        <a class="link-ver" href="${url}" target="_blank" rel="noopener">
           <i class="ti ti-external-link" style="font-size:13px"></i> Ver
         </a>
       </div>
@@ -804,8 +608,6 @@ function renderVisible() {
   let vis;
   if (activeCat === 'opp') {
     vis = oportunidades;
-  } else if (activeCat === 'post') {
-    vis = postuladas;
   } else {
     const base = currentResults();
     if (typeof activeCat === 'number') {
@@ -826,8 +628,6 @@ function renderVisible() {
     let msg;
     if (activeCat === 'opp') {
       msg = 'Aún no has marcado ninguna oportunidad. Usa la estrella en cada resultado para guardarla aquí.';
-    } else if (activeCat === 'post') {
-      msg = 'Aún no has marcado cotizaciones como postuladas. Usa el botón "Postulada" en cada resultado.';
     } else if (fuente === 'lic' && !licBuscada) {
       msg = 'Presiona "Buscar licitaciones" para buscar tus categorías en licitaciones públicas.';
     } else {
@@ -836,16 +636,13 @@ function renderVisible() {
     el.innerHTML = `<div class="empty"><i class="ti ti-search-off"></i>${msg}</div>`;
     return;
   }
-  const sortLabel = activeCat === 'opp' ? 'Guardadas'
-                  : activeCat === 'post' ? 'Postuladas'
-                  : 'Más reciente primero';
-  const cardFn = activeCat === 'post' ? renderPostuladaCard : renderCard;
+  const sortLabel = activeCat === 'opp' ? 'Guardadas' : 'Más reciente primero';
   el.innerHTML =
     `<div class="results-meta">
       <span class="results-count">${vis.length} resultado${vis.length !== 1 ? 's' : ''}</span>
       <span class="sort-lbl"><i class="ti ti-arrow-down" style="font-size:11px"></i> ${sortLabel}</span>
     </div>` +
-    vis.map(cardFn).join('');
+    vis.map(renderCard).join('');
 }
 
 async function buscarTodo() {
@@ -861,23 +658,16 @@ async function buscarTodo() {
     return;
   }
 
-  let done = 0;
-  const errors  = [];
+  let done = 0, fetched = [], errors = [];
 
-  function renderProgresoBusqueda() {
-    el.innerHTML = `<div class="progress-wrap">
-      <div>Buscando <strong>${done}</strong> de <strong>${allWords.length}</strong> palabras clave</div>
-      <div class="prog-track"><div class="prog-fill" style="width:${Math.round((done / allWords.length) * 100)}%"></div></div>
-    </div>`;
-  }
-  renderProgresoBusqueda();
+  el.innerHTML = `<div class="progress-wrap">
+    <div>Buscando <strong id="p-kw">…</strong> · palabra <strong id="p-cur">1</strong> de <strong>${allWords.length}</strong></div>
+    <div class="prog-track"><div class="prog-fill" id="p-fill" style="width:0%"></div></div>
+  </div>`;
 
-  // Se consultan varias palabras clave en paralelo (no cambia qué se trae, solo la
-  // velocidad): antes se esperaba una por una, ahora se piden varias a la vez.
-  // Cada palabra devuelve su propia lista; la mezcla final se hace después, en el
-  // orden original de las categorías, para que la atribución sea siempre la misma.
-  const porPalabra = await pLimitAll(allWords, 6, async (kw) => {
-    const encontrados = [];
+  for (const kw of allWords) {
+    const pk = document.getElementById('p-kw');
+    if (pk) pk.textContent = `"${kw}"`;
     try {
       const qs = new URLSearchParams({ q: kw, estado, tamano: '50' });
       if (region) qs.set('region', region);
@@ -891,32 +681,25 @@ async function buscarTodo() {
             if (word.length <= 2) return new RegExp('\\b' + word + '\\b', 'i').test(titulo);
             return titulo.includes(word);
           });
-          if (match) encontrados.push({ ...item, _kw: kw });
+          if (!fetched.find(r => r.codigo === item.codigo) && match) {
+            item._kw = kw;
+            fetched.push(item);
+          }
         });
       } else if (data?.error) {
         errors.push(`${kw}: ${data.error}`);
       }
     } catch(e) { errors.push(`${kw}: ${e.message}`); }
     done++;
-    renderProgresoBusqueda();
-    return encontrados;
-  });
-
-  // Mezcla en el orden de la lista de palabras: si una compra coincide con varias
-  // categorías, queda siempre en la primera, igual que en la versión secuencial.
-  const fetched = [];
-  porPalabra.forEach(lista => {
-    (lista || []).forEach(item => {
-      if (!fetched.find(r => r.codigo === item.codigo)) fetched.push(item);
-    });
-  });
+    const pf = document.getElementById('p-fill');
+    const pc = document.getElementById('p-cur');
+    if (pf) pf.style.width = Math.round((done / allWords.length) * 100) + '%';
+    if (pc) pc.textContent = Math.min(done + 1, allWords.length);
+  }
 
   allResults = fetched.sort((a, b) =>
     (b.montos?.monto_disponible_clp || 0) - (a.montos?.monto_disponible_clp || 0)
   );
-
-  // Marca localmente (en este navegador) cuáles resultados no estaban en el barrido anterior
-  actualizarNuevosEnBarrido(allResults.map(r => r.codigo));
 
   activeCat = null;
   renderAll(); updateScope();
@@ -1036,20 +819,6 @@ async function buscarLicitaciones() {
   if (btn) btn.disabled = false;
 }
 
-// --- Cotización AMK (Excel a partir de la plantilla de Andes Medikeep) ---
-
-function generarCotizacion(codigo, tipo, e, formato) {
-  if (e) e.stopPropagation();
-  let url = `/api/cotizacion?codigo=${encodeURIComponent(codigo)}&tipo=${encodeURIComponent(tipo || 'ca')}`;
-  if (formato) url += `&formato=${encodeURIComponent(formato)}`;
-  const a = document.createElement('a');
-  a.href = url;
-  a.rel = 'noopener';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-
 // --- Precios de referencia (histórico de Órdenes de Compra, on-demand) ---
 
 function tipoOcLabel(t) {
@@ -1097,7 +866,7 @@ async function descargarPrecios(idx) {
 
   if (btn) btn.disabled = true;
 
-  const DIAS = 270; // ≈ 9 meses
+  const DIAS = 540; // ≈ 18 meses
   const hoy = new Date();
   const fechas = [];
   for (let i = 0; i < DIAS; i++) {
@@ -1112,7 +881,7 @@ async function descargarPrecios(idx) {
 
   function renderProgresoDias() {
     el.innerHTML = `<div class="progress-wrap">
-      <div>Revisando compras de <strong>${cat.name}</strong> · día <strong>${doneDias}</strong> de <strong>${DIAS}</strong> (≈9 meses)</div>
+      <div>Revisando compras de <strong>${cat.name}</strong> · día <strong>${doneDias}</strong> de <strong>${DIAS}</strong> (≈18 meses)</div>
       <div class="prog-track"><div class="prog-fill" style="width:${Math.round((doneDias / DIAS) * 100)}%"></div></div>
       <div style="margin-top:6px;font-size:11px">${matches.length} coincidencias encontradas hasta ahora</div>
     </div>`;
@@ -1134,7 +903,7 @@ async function descargarPrecios(idx) {
   });
 
   if (!matches.length) {
-    el.innerHTML = `<div class="empty"><i class="ti ti-file-off"></i>No se encontraron compras en los últimos 9 meses para "${cat.name}"</div>`;
+    el.innerHTML = `<div class="empty"><i class="ti ti-file-off"></i>No se encontraron compras en los últimos 18 meses para "${cat.name}"</div>`;
     if (btn) btn.disabled = false;
     setTimeout(renderVisible, 2500);
     return;
