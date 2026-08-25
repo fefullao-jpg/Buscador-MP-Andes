@@ -279,8 +279,7 @@ async function loadStorage() {
     if (backup) cats = JSON.parse(backup);
     else seedCats();
   }
-  await loadOportunidades();
-  await loadVistos();
+  await Promise.all([loadOportunidades(), loadVistos()]);
   try { const s = localStorage.getItem(KEY_KEY); if(s) apiKey = s; } catch(e) {}
   document.getElementById('api-inp').value = apiKey;
   updateBadge();
@@ -332,6 +331,10 @@ async function loadVistos() {
     const data = await res.json();
     if (data.codigos) {
       vistos = data.codigos;
+      if (vistos.length > VISTOS_MAX) {
+        vistos = vistos.slice(vistos.length - VISTOS_MAX);
+        saveVistos(); // poda en Upstash la lista historica para que las proximas cargas sean livianas
+      }
       try { localStorage.setItem(VISTOS_BACKUP_KEY, JSON.stringify(vistos)); } catch(e) {}
     } else {
       const backup = localStorage.getItem(VISTOS_BACKUP_KEY);
@@ -356,9 +359,12 @@ async function saveVistos() {
 
 function esVisto(codigo) { return vistos.includes(codigo); }
 
+const VISTOS_MAX = 800; // evita que la lista crezca sin limite y haga cada vez mas lenta la carga
+
 function marcarVisto(codigo) {
   if (vistos.includes(codigo)) return;
   vistos.push(codigo);
+  if (vistos.length > VISTOS_MAX) vistos = vistos.slice(vistos.length - VISTOS_MAX);
   saveVistos();
   renderVisible();
 }
