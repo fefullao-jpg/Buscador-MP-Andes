@@ -1,5 +1,3 @@
-
-Index recuperado · TXT
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -144,6 +142,8 @@ Index recuperado · TXT
     .pill-cat { font-size: 11px; background: rgba(30,58,110,.08); color: var(--navy); border-radius: 20px; padding: 2px 9px; font-weight: 500; }
     .pill-kw  { font-size: 11px; background: var(--teal-bg); color: #065f52; border-radius: 20px; padding: 2px 9px; }
     .pill-cod { font-size: 11px; background: #f1f5f9; color: #475569; border-radius: 20px; padding: 2px 9px; font-family: monospace; }
+    .pill-items { font-size: 11px; background: #dcfce7; color: #166534; border-radius: 20px; padding: 2px 9px; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
+    .pill-items.many { background: #fef9c3; color: #854d0e; }
     .card-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .btn-star { background: none; border: 1px solid var(--border-md); border-radius: 20px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); flex-shrink: 0; font-size: 15px; }
     .btn-star:hover { border-color: var(--amber); color: var(--amber); }
@@ -171,7 +171,7 @@ Index recuperado · TXT
   </style>
 </head>
 <body>
- 
+
 <div class="hdr">
   <div class="hdr-logo"><i class="ti ti-building-hospital" style="color:#fff;font-size:17px;"></i></div>
   <h1>Compra Ágil · <span>Buscador</span></h1>
@@ -180,7 +180,7 @@ Index recuperado · TXT
     <button class="btn-hdr" onclick="buscarTodo()"><i class="ti ti-refresh"></i> Actualizar</button>
   </div>
 </div>
- 
+
 <div class="layout">
   <div class="side">
     <div class="side-top">
@@ -217,7 +217,7 @@ Index recuperado · TXT
       </div>
     </div>
   </div>
- 
+
   <div class="main">
     <div class="top-bar">
       <select id="estado-sel" onchange="renderVisible()">
@@ -261,7 +261,7 @@ Index recuperado · TXT
     </div>
   </div>
 </div>
- 
+
 <script>
 const KEY_KEY    = 'mp_ca_key_v1';
 const BACKUP_KEY = 'mp_cats_backup';
@@ -269,7 +269,7 @@ const OPP_BACKUP_KEY = 'mp_opp_backup';
 const POST_BACKUP_KEY = 'mp_post_backup';
 const VISTOS_BACKUP_KEY = 'mp_vistos_backup';
 const DEF_KEY    = '38366B56-462A-4B4F-9FEE-18F946D9F1B5';
- 
+
 let cats          = [];
 let oportunidades = [];
 let postuladas    = [];
@@ -280,16 +280,16 @@ let allResults    = [];
 let allResultsLic = [];
 let fuente        = 'ca'; // 'ca' = Compra Ágil | 'lic' = Licitaciones
 let licBuscada    = false;
- 
+
 function currentResults() { return fuente === 'lic' ? allResultsLic : allResults; }
- 
+
 function setFuente(f) {
   fuente = f;
   document.querySelectorAll('.ftg-btn').forEach(b => b.classList.toggle('active', b.dataset.f === f));
   activeCat = null;
   renderAll(); updateScope(); renderVisible();
 }
- 
+
 async function loadStorage() {
   try {
     const res  = await fetch('/api/categorias');
@@ -312,7 +312,7 @@ async function loadStorage() {
   document.getElementById('api-inp').value = apiKey;
   updateBadge();
 }
- 
+
 async function saveStorage() {
   try {
     await fetch('/api/categorias', {
@@ -324,7 +324,7 @@ async function saveStorage() {
   } catch(e) {}
   try { localStorage.setItem(KEY_KEY, apiKey); } catch(e) {}
 }
- 
+
 async function loadOportunidades() {
   try {
     const res  = await fetch('/api/oportunidades');
@@ -341,7 +341,7 @@ async function loadOportunidades() {
     if (backup) oportunidades = JSON.parse(backup);
   }
 }
- 
+
 async function saveOportunidades() {
   try {
     await fetch('/api/oportunidades', {
@@ -352,7 +352,7 @@ async function saveOportunidades() {
     try { localStorage.setItem(OPP_BACKUP_KEY, JSON.stringify(oportunidades)); } catch(e) {}
   } catch(e) {}
 }
- 
+
 // ---- Postuladas (cotizaciones en que Andes Medikeep participó) ----
 async function loadPostuladas() {
   try {
@@ -370,7 +370,7 @@ async function loadPostuladas() {
     if (backup) postuladas = JSON.parse(backup);
   }
 }
- 
+
 async function savePostuladas() {
   try {
     await fetch('/api/postuladas', {
@@ -381,9 +381,9 @@ async function savePostuladas() {
     try { localStorage.setItem(POST_BACKUP_KEY, JSON.stringify(postuladas)); } catch(e) {}
   } catch(e) {}
 }
- 
+
 function isPostulada(codigo) { return postuladas.some(p => p.codigo === codigo); }
- 
+
 function togglePostulada(codigo, e) {
   if (e) e.stopPropagation();
   const idx = postuladas.findIndex(p => p.codigo === codigo);
@@ -403,7 +403,7 @@ function togglePostulada(codigo, e) {
   renderPostCount();
   renderVisible();
 }
- 
+
 function setPostResultado(codigo, valor) {
   const p = postuladas.find(x => x.codigo === codigo);
   if (!p) return;
@@ -411,14 +411,14 @@ function setPostResultado(codigo, valor) {
   savePostuladas();
   renderVisible();
 }
- 
+
 function setPostPrecio(codigo, campo, valor) {
   const p = postuladas.find(x => x.codigo === codigo);
   if (!p) return;
   p[campo] = valor;
   savePostuladas(); // guarda sin re-render para no perder el foco del input
 }
- 
+
 async function loadVistos() {
   try {
     const res  = await fetch('/api/vistos');
@@ -439,7 +439,7 @@ async function loadVistos() {
     if (backup) vistos = JSON.parse(backup);
   }
 }
- 
+
 async function saveVistos() {
   try {
     await fetch('/api/vistos', {
@@ -450,16 +450,16 @@ async function saveVistos() {
     try { localStorage.setItem(VISTOS_BACKUP_KEY, JSON.stringify(vistos)); } catch(e) {}
   } catch(e) {}
 }
- 
+
 function esVisto(codigo) { return vistos.includes(codigo); }
- 
+
 // "Nuevo" (por barrido) es 100% local a este navegador — no se guarda en Redis ni se
 // comparte entre dispositivos/usuarios. Cada persona ve sus propias novedades.
 const NUEVO_BARRIDO_KEY = 'mp_ultimo_barrido_ca';
 let nuevosEnBarrido = new Set();
- 
+
 function esNuevoEnBarrido(codigo) { return nuevosEnBarrido.has(codigo); }
- 
+
 function actualizarNuevosEnBarrido(codigos) {
   let anterior = null;
   try {
@@ -473,9 +473,9 @@ function actualizarNuevosEnBarrido(codigos) {
   }
   try { localStorage.setItem(NUEVO_BARRIDO_KEY, JSON.stringify(codigos)); } catch (e) {}
 }
- 
+
 const VISTOS_MAX = 800; // evita que la lista crezca sin limite y haga cada vez mas lenta la carga
- 
+
 function marcarVisto(codigo) {
   if (vistos.includes(codigo)) return;
   vistos.push(codigo);
@@ -483,9 +483,9 @@ function marcarVisto(codigo) {
   saveVistos();
   renderVisible();
 }
- 
+
 function isOpp(codigo) { return oportunidades.some(o => o.codigo === codigo); }
- 
+
 function toggleOpp(codigo, e) {
   if (e) e.stopPropagation();
   const idx = oportunidades.findIndex(o => o.codigo === codigo);
@@ -499,19 +499,19 @@ function toggleOpp(codigo, e) {
   renderOppCount();
   renderVisible();
 }
- 
+
 function saveKey() {
   apiKey = document.getElementById('api-inp').value.trim() || DEF_KEY;
   try { localStorage.setItem(KEY_KEY, apiKey); } catch(e) {}
   updateBadge();
 }
- 
+
 function updateBadge() {
   const b = document.getElementById('api-badge');
   b.textContent = apiKey ? 'API conectada' : 'Sin API key';
   b.className   = apiKey ? 'badge-ok' : 'badge-nok';
 }
- 
+
 function seedCats() {
   cats = [
     { name:'Catéter JJ',       words:['cateter jj','pigtail','doble j','ureteral stent'] },
@@ -519,7 +519,7 @@ function seedCats() {
     { name:'Electrodo TURP',    words:['electrodo turp','asa bipolar','storz bipolar'] },
   ];
 }
- 
+
 function addCat() {
   const inp = document.getElementById('cat-inp');
   const val = inp.value.trim();
@@ -528,7 +528,7 @@ function addCat() {
   inp.value = '';
   saveStorage(); renderCatList();
 }
- 
+
 function delCat(idx, e) {
   e.stopPropagation();
   cats.splice(idx, 1);
@@ -536,18 +536,18 @@ function delCat(idx, e) {
   else if (typeof activeCat === 'number' && activeCat > idx) activeCat--;
   saveStorage(); renderAll(); updateScope(); renderVisible();
 }
- 
+
 function selCat(idx) {
   activeCat = (activeCat === idx) ? null : idx;
   renderAll(); updateScope(); renderVisible();
 }
- 
+
 function selAll() { activeCat = null; renderAll(); updateScope(); renderVisible(); }
- 
+
 function selOpp() { activeCat = (activeCat === 'opp') ? null : 'opp'; renderAll(); updateScope(); renderVisible(); }
- 
+
 function selPost() { activeCat = (activeCat === 'post') ? null : 'post'; renderAll(); updateScope(); renderVisible(); }
- 
+
 function addSub() {
   if (typeof activeCat !== 'number') return;
   const inp = document.getElementById('sub-inp');
@@ -557,23 +557,23 @@ function addSub() {
   inp.value = '';
   saveStorage(); renderSubArea(); renderCatList();
 }
- 
+
 function delSub(word, e) {
   e.stopPropagation();
   if (typeof activeCat !== 'number') return;
   cats[activeCat].words = cats[activeCat].words.filter(w => w !== word);
   saveStorage(); renderSubArea(); renderCatList();
 }
- 
+
 function cntForCat(idx) {
   const res = currentResults();
   if (!res.length) return null;
   const ws = cats[idx]?.words || [];
   return res.filter(r => ws.includes(r._kw)).length;
 }
- 
+
 function renderAll() { renderCatList(); renderSubArea(); renderOppCount(); renderPostCount(); }
- 
+
 function renderOppCount() {
   const cntEl = document.getElementById('opp-cnt');
   if (cntEl) {
@@ -583,7 +583,7 @@ function renderOppCount() {
   const oppEl = document.getElementById('opp-item');
   if (oppEl) oppEl.classList.toggle('active', activeCat === 'opp');
 }
- 
+
 function renderPostCount() {
   const cntEl = document.getElementById('post-cnt');
   if (cntEl) {
@@ -593,7 +593,7 @@ function renderPostCount() {
   const postEl = document.getElementById('post-item');
   if (postEl) postEl.classList.toggle('active', activeCat === 'post');
 }
- 
+
 function renderCatList() {
   const el    = document.getElementById('cat-list');
   const total = currentResults().length;
@@ -619,7 +619,7 @@ function renderCatList() {
   }
   el.innerHTML = html;
 }
- 
+
 function renderSubArea() {
   const el = document.getElementById('sub-area');
   if (typeof activeCat !== 'number') { el.innerHTML = ''; return; }
@@ -646,7 +646,7 @@ function renderSubArea() {
     </button>
   </div>`;
 }
- 
+
 function updateScope() {
   const bar = document.getElementById('scope-bar');
   const src = `<span class="chip chip-src">${fuente === 'lic' ? 'Licitaciones' : 'Compra Ágil'}</span>`;
@@ -666,7 +666,7 @@ function updateScope() {
       <span class="chip chip-cat">${c.name}</span> · ${ws}`;
   }
 }
- 
+
 function fmtFecha(str) {
   if (!str) return { text: '—', cls: '' };
   const d = new Date(str), now = new Date();
@@ -675,9 +675,9 @@ function fmtFecha(str) {
   const t = d.toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' });
   return { text: `${f} · ${t}`, cls: h < 0 ? '' : h < 24 ? 'urgente' : h < 72 ? 'pronto' : '' };
 }
- 
+
 function fmtMonto(m) { return (!m || m === 0) ? '—' : '$' + Number(m).toLocaleString('es-CL'); }
- 
+
 function badgeEstado(e) {
   const map = {
     publicada:              ['badge-pub',  'Publicada'],
@@ -692,9 +692,9 @@ function badgeEstado(e) {
   const [cls, lbl] = map[e] || ['badge-cerr', e || '—'];
   return `<span class="badge ${cls}">${lbl}</span>`;
 }
- 
+
 function catFor(kw) { const c = cats.find(c => c.words.includes(kw)); return c ? c.name : kw; }
- 
+
 function renderCard(item) {
   const estado = item.estado?.codigo || '';
   const nombre = item.nombre || 'Sin título';
@@ -729,6 +729,7 @@ function renderCard(item) {
         <span class="pill-cat">${catN}</span>
         ${item._kw ? `<span class="pill-kw">kw: ${item._kw}</span>` : ''}
         <span class="pill-cod">${codigo}</span>
+        ${item._tipo === 'lic' && item._itemsCount != null ? `<span class="pill-items${item._itemsCount > 5 ? ' many' : ''}"><i class="ti ti-list" style="font-size:11px"></i> ${item._itemsCount} ítem${item._itemsCount !== 1 ? 's' : ''} distinto${item._itemsCount !== 1 ? 's' : ''}</span>` : ''}
       </div>
       <div class="card-actions">
         <button class="btn-cotiz" onclick="generarCotizacion('${codigo.replace(/'/g,"\\'")}', '${item._tipo === 'lic' ? 'lic' : 'ca'}', event)" title="Generar Cotización Andes Medikeep en Excel">
@@ -750,7 +751,7 @@ function renderCard(item) {
     </div>
   </div>`;
 }
- 
+
 function renderPostuladaCard(item) {
   const estado = item.estado?.codigo || '';
   const nombre = item.nombre || 'Sin título';
@@ -805,7 +806,7 @@ function renderPostuladaCard(item) {
     </div>
   </div>`;
 }
- 
+
 function renderVisible() {
   const el  = document.getElementById('main-area');
   let vis;
@@ -854,7 +855,7 @@ function renderVisible() {
     </div>` +
     vis.map(cardFn).join('');
 }
- 
+
 async function buscarTodo() {
   fuente = 'ca';
   document.querySelectorAll('.ftg-btn').forEach(b => b.classList.toggle('active', b.dataset.f === 'ca'));
@@ -862,15 +863,15 @@ async function buscarTodo() {
   const estado   = document.getElementById('estado-sel').value;
   const region   = document.getElementById('region-sel').value;
   const allWords = cats.flatMap(c => c.words);
- 
+
   if (!allWords.length) {
     el.innerHTML = '<div class="empty"><i class="ti ti-folder-search"></i>Agrega categorías con palabras clave para comenzar</div>';
     return;
   }
- 
+
   let done = 0;
   const errors  = [];
- 
+
   function renderProgresoBusqueda() {
     el.innerHTML = `<div class="progress-wrap">
       <div>Buscando <strong>${done}</strong> de <strong>${allWords.length}</strong> palabras clave</div>
@@ -878,7 +879,7 @@ async function buscarTodo() {
     </div>`;
   }
   renderProgresoBusqueda();
- 
+
   // Se consultan varias palabras clave en paralelo (no cambia qué se trae, solo la
   // velocidad): antes se esperaba una por una, ahora se piden varias a la vez.
   // Cada palabra devuelve su propia lista; la mezcla final se hace después, en el
@@ -908,7 +909,7 @@ async function buscarTodo() {
     renderProgresoBusqueda();
     return encontrados;
   });
- 
+
   // Mezcla en el orden de la lista de palabras: si una compra coincide con varias
   // categorías, queda siempre en la primera, igual que en la versión secuencial.
   const fetched = [];
@@ -917,17 +918,17 @@ async function buscarTodo() {
       if (!fetched.find(r => r.codigo === item.codigo)) fetched.push(item);
     });
   });
- 
+
   allResults = fetched.sort((a, b) =>
     (b.montos?.monto_disponible_clp || 0) - (a.montos?.monto_disponible_clp || 0)
   );
- 
+
   // Marca localmente (en este navegador) cuáles resultados no estaban en el barrido anterior
   actualizarNuevosEnBarrido(allResults.map(r => r.codigo));
- 
+
   activeCat = null;
   renderAll(); updateScope();
- 
+
   if (errors.length && !allResults.length) {
     el.innerHTML = `<div class="err-box"><i class="ti ti-alert-circle" style="font-size:14px"></i>
       Error al consultar la API: ${errors[0]}<br>
@@ -935,32 +936,32 @@ async function buscarTodo() {
     </div>`;
     return;
   }
- 
+
   renderVisible();
 }
- 
+
 function estadoLicSlug(codigo) {
   const map = { 5: 'publicada', 6: 'cerrada', 7: 'desierta', 8: 'proveedor_seleccionado', 18: 'revocada', 19: 'suspendida' };
   return map[codigo] || 'cerrada';
 }
- 
+
 async function buscarLicitaciones() {
   const el       = document.getElementById('main-area');
   const allWords = cats.flatMap(c => c.words);
   const btn      = document.getElementById('btn-buscar-lic');
- 
+
   if (!allWords.length) {
     el.innerHTML = '<div class="empty"><i class="ti ti-folder-search"></i>Agrega categorías con palabras clave para comenzar</div>';
     return;
   }
- 
+
   fuente = 'lic';
   document.querySelectorAll('.ftg-btn').forEach(b => b.classList.toggle('active', b.dataset.f === 'lic'));
   activeCat = null;
   if (btn) btn.disabled = true;
- 
+
   el.innerHTML = `<div class="progress-wrap"><div>Cargando licitaciones activas publicadas hoy...</div></div>`;
- 
+
   let listado = [];
   try {
     const res  = await fetch('/api/licitaciones-lista');
@@ -973,7 +974,7 @@ async function buscarLicitaciones() {
     if (btn) btn.disabled = false;
     return;
   }
- 
+
   // Mismo criterio de coincidencia que Compra Ágil, aplicado localmente sobre el listado
   const matches = [];
   allWords.forEach(kw => {
@@ -989,7 +990,7 @@ async function buscarLicitaciones() {
       }
     });
   });
- 
+
   if (!matches.length) {
     allResultsLic = [];
     licBuscada = true;
@@ -997,7 +998,7 @@ async function buscarLicitaciones() {
     if (btn) btn.disabled = false;
     return;
   }
- 
+
   // Trae el detalle (organismo, monto, fechas) solo de las coincidencias encontradas
   const detallados = [];
   let done = 0;
@@ -1019,6 +1020,7 @@ async function buscarLicitaciones() {
         estado: { codigo: estadoLicSlug(d?.CodigoEstado ?? m.CodigoEstado) },
         _kw: m._kw,
         _tipo: 'lic',
+        _itemsCount: d?.Items?.Cantidad ?? (Array.isArray(d?.Items?.Listado) ? d.Items.Listado.length : null),
       });
     } catch (e) {
       detallados.push({
@@ -1030,11 +1032,12 @@ async function buscarLicitaciones() {
         estado: { codigo: estadoLicSlug(m.CodigoEstado) },
         _kw: m._kw,
         _tipo: 'lic',
+        _itemsCount: null,
       });
     }
     done++;
   }
- 
+
   allResultsLic = detallados.sort((a, b) =>
     (b.montos.monto_disponible_clp || 0) - (a.montos.monto_disponible_clp || 0)
   );
@@ -1042,9 +1045,9 @@ async function buscarLicitaciones() {
   renderAll(); updateScope(); renderVisible();
   if (btn) btn.disabled = false;
 }
- 
+
 // --- Cotización AMK (Excel a partir de la plantilla de Andes Medikeep) ---
- 
+
 function generarCotizacion(codigo, tipo, e, formato) {
   if (e) e.stopPropagation();
   let url = `/api/cotizacion?codigo=${encodeURIComponent(codigo)}&tipo=${encodeURIComponent(tipo || 'ca')}`;
@@ -1056,14 +1059,14 @@ function generarCotizacion(codigo, tipo, e, formato) {
   a.click();
   document.body.removeChild(a);
 }
- 
+
 // --- Precios de referencia (histórico de Órdenes de Compra, on-demand) ---
- 
+
 function tipoOcLabel(t) {
   const map = { AG: 'Compra Ágil', LE: 'Licitación', LP: 'Licitación', LQ: 'Licitación', LR: 'Licitación', LS: 'Licitación', L1: 'Licitación', CM: 'Convenio Marco', E2: 'Trato Directo', TD: 'Trato Directo' };
   return map[t] || (t || '—');
 }
- 
+
 async function pLimitAll(items, limit, worker) {
   let i = 0;
   const results = [];
@@ -1076,7 +1079,7 @@ async function pLimitAll(items, limit, worker) {
   await Promise.all(Array(Math.min(limit, items.length)).fill(0).map(next));
   return results;
 }
- 
+
 function generarExcelPrecios(nombreCat, filas) {
   const data = [
     ['Producto', 'Precio unitario neto (CLP)', 'Cantidad', 'Comprador', 'Vendedor', 'Fecha', 'Tipo', 'Código OC'],
@@ -1089,7 +1092,7 @@ function generarExcelPrecios(nombreCat, filas) {
   const fname = `Precios_${nombreCat.replace(/[^a-zA-Z0-9]+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`;
   XLSX.writeFile(wb, fname);
 }
- 
+
 // La API de Mercado Publico falla de forma intermitente. Reintenta con backoff
 // antes de dar por perdido un dia o una OC (evita que se pierdan resultados en silencio).
 async function fetchJSONRetry(url, tries = 3) {
@@ -1106,21 +1109,21 @@ async function fetchJSONRetry(url, tries = 3) {
   }
   throw lastErr;
 }
- 
+
 async function descargarPrecios(idx) {
   if (typeof idx !== 'number' || !cats[idx]) return;
   const cat      = cats[idx];
   const allWords = cat.words;
   const btn      = document.getElementById('btn-precios');
   const el       = document.getElementById('main-area');
- 
+
   if (!allWords.length) {
     alert('Esta categoría no tiene palabras clave todavía.');
     return;
   }
- 
+
   if (btn) btn.disabled = true;
- 
+
   const DIAS = 540; // ≈ 18 meses
   const hoy = new Date();
   const fechas = [];
@@ -1129,12 +1132,12 @@ async function descargarPrecios(idx) {
     d.setDate(d.getDate() - i);
     fechas.push(`${String(d.getDate()).padStart(2, '0')}${String(d.getMonth() + 1).padStart(2, '0')}${d.getFullYear()}`);
   }
- 
+
   const palabras = encodeURIComponent(allWords.join('|'));
   const matches = [];
   const diasFallidos = [];
   let doneDias = 0;
- 
+
   function renderProgresoDias() {
     el.innerHTML = `<div class="progress-wrap">
       <div>Revisando compras de <strong>${cat.name}</strong> · día <strong>${doneDias}</strong> de <strong>${DIAS}</strong> (≈18 meses)</div>
@@ -1143,7 +1146,7 @@ async function descargarPrecios(idx) {
     </div>`;
   }
   renderProgresoDias();
- 
+
   await pLimitAll(fechas, 8, async (fecha) => {
     try {
       const data = await fetchJSONRetry(`/api/oc-lista?fecha=${fecha}&palabras=${palabras}`, 3);
@@ -1156,18 +1159,18 @@ async function descargarPrecios(idx) {
     doneDias++;
     if (doneDias % 4 === 0 || doneDias === DIAS) renderProgresoDias();
   });
- 
+
   if (!matches.length) {
     el.innerHTML = `<div class="empty"><i class="ti ti-file-off"></i>No se encontraron compras en los últimos 18 meses para "${cat.name}"</div>`;
     if (btn) btn.disabled = false;
     setTimeout(renderVisible, 2500);
     return;
   }
- 
+
   const filas = [];
   const ocFallidas = [];
   let doneDet = 0;
- 
+
   function renderProgresoDetalle() {
     el.innerHTML = `<div class="progress-wrap">
       <div>Obteniendo precios <strong>${doneDet}</strong> de <strong>${matches.length}</strong> coincidencias</div>
@@ -1175,7 +1178,7 @@ async function descargarPrecios(idx) {
     </div>`;
   }
   renderProgresoDetalle();
- 
+
   await pLimitAll(matches, 6, async (m) => {
     try {
       const data = await fetchJSONRetry(`/api/oc-detalle?codigo=${encodeURIComponent(m.Codigo)}`, 3);
@@ -1198,24 +1201,24 @@ async function descargarPrecios(idx) {
     doneDet++;
     if (doneDet % 3 === 0 || doneDet === matches.length) renderProgresoDetalle();
   });
- 
+
   if (!filas.length) {
     el.innerHTML = `<div class="empty"><i class="ti ti-file-off"></i>Se encontraron coincidencias pero no fue posible obtener el detalle de precios</div>`;
     if (btn) btn.disabled = false;
     setTimeout(renderVisible, 2500);
     return;
   }
- 
+
   filas.sort((a, b) => a.precio - b.precio);
   generarExcelPrecios(cat.name, filas);
- 
+
   if (btn) btn.disabled = false;
   if (diasFallidos.length || ocFallidas.length) {
     console.warn(`Precios ${cat.name}: ${diasFallidos.length} día(s) y ${ocFallidas.length} OC(s) no se pudieron consultar tras reintentar (posible resultado incompleto).`, { diasFallidos, ocFallidas });
   }
   renderVisible();
 }
- 
+
 loadStorage().then(() => {
   renderAll();
   updateScope();
@@ -1224,6 +1227,3 @@ loadStorage().then(() => {
 </script>
 </body>
 </html>
- 
-
-
