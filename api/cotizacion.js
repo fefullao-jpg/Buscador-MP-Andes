@@ -10,6 +10,33 @@ const TICKET  = process.env.MP_TICKET || '38366B56-462A-4B4F-9FEE-18F946D9F1B5';
 const BASE_V1 = 'https://api.mercadopublico.cl/servicios/v1/publico/licitaciones.json';
 const BASE_V2 = 'https://api2.mercadopublico.cl';
 
+// Reintenta la petición ante errores transitorios (504/503/502 o de red), con una
+// pequeña espera creciente entre intentos. La API de Mercado Público es propensa a
+// tiempos de espera agotados esporádicos; sin esto, un solo timeout hacía fallar
+// toda la cotización aunque un segundo intento normalmente sí responde.
+async function fetchConReintento(url, opciones = {}, intentos = 3, esperaMs = 700) {
+  let ultimoError;
+  for (let i = 0; i < intentos; i++) {
+    try {
+      const r = await fetch(url, opciones);
+      if (!r.ok && [502, 503, 504].includes(r.status) && i < intentos - 1) {
+        ultimoError = new Error(`HTTP ${r.status}`);
+        await new Promise(res => setTimeout(res, esperaMs * (i + 1)));
+        continue;
+      }
+      return r;
+    } catch (e) {
+      ultimoError = e;
+      if (i < intentos - 1) {
+        await new Promise(res => setTimeout(res, esperaMs * (i + 1)));
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw ultimoError;
+}
+
 function limpiar(v) {
   return (v == null ? '' : String(v)).replace(/\s+/g, ' ').trim();
 }
@@ -17,7 +44,7 @@ function limpiar(v) {
 // Arma una dirección legible a partir de calle / comuna / región
 // Normaliza para comparar: minúsculas, sin tildes y sin espacios sobrantes
 function normalizar(v) {
-  return limpiar(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return limpiar(v).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
 
 // Une calle, comuna y región en una sola línea, agregando lo que falte y sin
@@ -36,7 +63,7 @@ function armarDireccion(calle, comuna, region) {
 }
 
 async function datosLicitacion(codigo) {
-  const r = await fetch(`${BASE_V1}?codigo=${encodeURIComponent(codigo)}&ticket=${TICKET}`);
+  const r = await fetchConReintento(`${BASE_V1}?codigo=${encodeURIComponent(codigo)}&ticket=${TICKET}`);
   if (!r.ok) throw new Error(`Licitación ${codigo}: ${r.status}`);
   const data = await r.json();
   const it   = (data.Listado && data.Listado[0]) || null;
@@ -54,7 +81,7 @@ async function datosLicitacion(codigo) {
 async function datosCompraAgil(codigo) {
   // 1) intenta el detalle (trae la dirección de entrega del proceso)
   try {
-    const r = await fetch(`${BASE_V2}/v2/compra-agil/${encodeURIComponent(codigo)}`, {
+    const r = await fetchConReintento(`${BASE_V2}/v2/compra-agil/${encodeURIComponent(codigo)}`, {
       headers: { ticket: TICKET },
     });
     if (r.ok) {
@@ -78,7 +105,7 @@ async function datosCompraAgil(codigo) {
   } catch (e) { /* si falla el detalle, se cae al buscador */ }
 
   // 2) respaldo: busca por código en el listado de compra ágil
-  const r2 = await fetch(`${BASE_V2}/v2/compra-agil?q=${encodeURIComponent(codigo)}&tamano_pagina=50`, {
+  const r2 = await fetchConReintento(`${BASE_V2}/v2/compra-agil?q=${encodeURIComponent(codigo)}&tamano_pagina=50`, {
     headers: { ticket: TICKET },
   });
   if (!r2.ok) throw new Error(`Compra Ágil ${codigo}: ${r2.status}`);
