@@ -6,6 +6,11 @@ import ExcelJS from 'exceljs';
 import { PLANTILLA_B64 } from './_lib/plantilla-cotizacion.js';
 import { PLANTILLA_EMC_B64 } from './_lib/plantilla-cotizacion-emc.js';
 
+// La API de Compra Ágil de ChileCompra puede tardar 20-25s en responder cuando está
+// congestionada (en vez de fallar rápido); sin esto, Vercel cortaba la función antes
+// de que llegara esa respuesta lenta pero válida.
+export const config = { maxDuration: 60 };
+
 const TICKET  = process.env.MP_TICKET || '38366B56-462A-4B4F-9FEE-18F946D9F1B5';
 const BASE_V1 = 'https://api.mercadopublico.cl/servicios/v1/publico/licitaciones.json';
 const BASE_V2 = 'https://api2.mercadopublico.cl';
