@@ -641,6 +641,9 @@ function renderSubArea() {
       <input type="text" id="sub-inp" placeholder="agregar palabra..." onkeydown="if(event.key==='Enter')addSub()" />
       <button class="btn-add-sw" onclick="addSub()" aria-label="Agregar">+</button>
     </div>
+    <button class="btn-precios" id="btn-buscar-cat" onclick="buscarTodo(${activeCat})">
+      <i class="ti ti-search"></i> Buscar solo esta categoría
+    </button>
     <button class="btn-precios" id="btn-precios" onclick="descargarPrecios(${activeCat})">
       <i class="ti ti-file-spreadsheet"></i> Precios de referencia (Excel, 18 meses)
     </button>
@@ -856,42 +859,51 @@ function renderVisible() {
     vis.map(cardFn).join('');
 }
 
-async function buscarTodo() {
+let barridoId = 0; // la última búsqueda iniciada manda: cancela a la anterior si seguía en curso
+
+// soloIdx (opcional): índice de una categoría; si viene, se buscan solo sus palabras y los
+// resultados se suman a los que ya había (sin borrar las demás categorías).
+async function buscarTodo(soloIdx) {
+  const soloCat = (typeof soloIdx === 'number' && cats[soloIdx]) ? soloIdx : null;
   fuente = 'ca';
   document.querySelectorAll('.ftg-btn').forEach(b => b.classList.toggle('active', b.dataset.f === 'ca'));
   const el       = document.getElementById('main-area');
   const estado   = document.getElementById('estado-sel').value;
   const region   = document.getElementById('region-sel').value;
-  const allWords = cats.flatMap(c => c.words);
+  const allWords = soloCat !== null ? cats[soloCat].words.slice() : cats.flatMap(c => c.words);
 
   if (!allWords.length) {
     el.innerHTML = '<div class="empty"><i class="ti ti-folder-search"></i>Agrega categorías con palabras clave para comenzar</div>';
     return;
   }
 
-  let done = 0;
+  const miId = ++barridoId;
+  let done = 0, ok = 0, fallos = 0;
   const errors  = [];
+  const etiqueta = soloCat !== null ? `en <strong>${cats[soloCat].name}</strong>` : 'palabras clave';
 
   function renderProgresoBusqueda() {
     el.innerHTML = `<div class="progress-wrap">
-      <div>Buscando <strong>${done}</strong> de <strong>${allWords.length}</strong> palabras clave</div>
+      <div>Buscando <strong>${done}</strong> de <strong>${allWords.length}</strong> ${soloCat !== null ? 'palabras ' + etiqueta : etiqueta}</div>
       <div class="prog-track"><div class="prog-fill" style="width:${Math.round((done / allWords.length) * 100)}%"></div></div>
     </div>`;
   }
   renderProgresoBusqueda();
 
-  // Se consultan varias palabras clave en paralelo (no cambia qué se trae, solo la
-  // velocidad): antes se esperaba una por una, ahora se piden varias a la vez.
-  // Cada palabra devuelve su propia lista; la mezcla final se hace después, en el
-  // orden original de las categorías, para que la atribución sea siempre la misma.
-  const porPalabra = await pLimitAll(allWords, 6, async (kw) => {
+  // Se consultan varias palabras clave en paralelo (3 a la vez: la API de ChileCompra se
+  // satura con más). Si las primeras 12 consultas fallan todas, se corta el barrido en vez
+  // de esperar minutos a que fallen una por una.
+  const porPalabra = await pLimitAll(allWords, 3, async (kw) => {
     const encontrados = [];
+    if (miId !== barridoId) return encontrados;                 // búsqueda reemplazada por otra
+    if (ok === 0 && fallos >= 12) { done++; return encontrados; } // API caída: se omite el resto
     try {
       const qs = new URLSearchParams({ q: kw, estado, tamano: '50' });
       if (region) qs.set('region', region);
       const res  = await fetch(`/api/buscar?${qs.toString()}`);
       const data = await res.json();
       if (data?.payload?.items) {
+        ok++;
         data.payload.items.forEach(item => {
           const titulo  = (item.nombre || '').toLowerCase();
           const kwLower = kw.toLowerCase();
@@ -902,13 +914,16 @@ async function buscarTodo() {
           if (match) encontrados.push({ ...item, _kw: kw });
         });
       } else if (data?.error) {
+        fallos++;
         errors.push(`${kw}: ${data.error}`);
       }
-    } catch(e) { errors.push(`${kw}: ${e.message}`); }
+    } catch(e) { fallos++; errors.push(`${kw}: ${e.message}`); }
     done++;
-    renderProgresoBusqueda();
+    if (miId === barridoId) renderProgresoBusqueda();
     return encontrados;
   });
+
+  if (miId !== barridoId) return; // otra búsqueda tomó el control: no pisar su pantalla
 
   // Mezcla en el orden de la lista de palabras: si una compra coincide con varias
   // categorías, queda siempre en la primera, igual que en la versión secuencial.
@@ -919,25 +934,42 @@ async function buscarTodo() {
     });
   });
 
-  allResults = fetched.sort((a, b) =>
-    (b.montos?.monto_disponible_clp || 0) - (a.montos?.monto_disponible_clp || 0)
-  );
+  const porMonto = (a, b) => (b.montos?.monto_disponible_clp || 0) - (a.montos?.monto_disponible_clp || 0);
 
-  // Marca localmente (en este navegador) cuáles resultados no estaban en el barrido anterior
-  actualizarNuevosEnBarrido(allResults.map(r => r.codigo));
-
-  activeCat = null;
+  if (soloCat !== null) {
+    // Búsqueda de una sola categoría: reemplaza solo lo de esas palabras y conserva el resto
+    if (ok > 0) {
+      const palabras = new Set(allWords);
+      const resto = allResults.filter(r => !palabras.has(r._kw));
+      const nuevos = fetched.filter(r => !resto.find(x => x.codigo === r.codigo));
+      allResults = resto.concat(nuevos).sort(porMonto);
+    }
+    activeCat = soloCat;
+  } else {
+    // Si todo falló, se conservan los resultados que ya hubiera (p. ej. de búsquedas por categoría)
+    if (ok > 0 || !allResults.length) allResults = fetched.sort(porMonto);
+    // Marca localmente (en este navegador) cuáles resultados no estaban en el barrido anterior
+    if (ok > 0) actualizarNuevosEnBarrido(allResults.map(r => r.codigo));
+    activeCat = null;
+  }
   renderAll(); updateScope();
 
-  if (errors.length && !allResults.length) {
-    el.innerHTML = `<div class="err-box"><i class="ti ti-alert-circle" style="font-size:14px"></i>
-      Error al consultar la API: ${errors[0]}<br>
-      <small>Verifica que tu API key esté activa en <a href="https://api.mercadopublico.cl" target="_blank">api.mercadopublico.cl</a></small>
-    </div>`;
+  const fallaTotal = (ok === 0 && fallos > 0);
+  const msgFalla = `ChileCompra no respondió a tiempo (${fallos} consulta${fallos !== 1 ? 's' : ''} con error). Su API de Compra Ágil está lenta o caída: reintenta en unos minutos, o busca categoría por categoría.<br>
+      <small>Detalle: ${errors[0] || ''}</small>`;
+
+  if (fallaTotal && !(soloCat === null ? allResults.length : currentResults().length)) {
+    el.innerHTML = `<div class="err-box"><i class="ti ti-alert-circle" style="font-size:14px"></i> ${msgFalla}</div>`;
     return;
   }
 
   renderVisible();
+  if (fallaTotal) {
+    // Había resultados previos: se muestran, pero se avisa que esta búsqueda falló
+    el.insertAdjacentHTML('afterbegin', `<div class="err-box"><i class="ti ti-alert-circle" style="font-size:14px"></i> ${msgFalla}</div>`);
+  } else if (fallos > 0) {
+    el.insertAdjacentHTML('afterbegin', `<div class="err-box"><i class="ti ti-alert-circle" style="font-size:14px"></i> ${fallos} de ${allWords.length} palabras no respondieron a tiempo; puede que falten resultados. Puedes reintentar con el botón de buscar de la categoría.</div>`);
+  }
 }
 
 function estadoLicSlug(codigo) {
