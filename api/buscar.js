@@ -2,13 +2,16 @@
 // Actúa como proxy: recibe la búsqueda del frontend y llama a api2.mercadopublico.cl
 // con el ticket en el header (no expuesto al cliente)
 
+// Margen para respuestas lentas de ChileCompra (el gateway corta a ~30s); 2 intentos caben en 60s.
+export const config = { maxDuration: 60 };
+
 const TICKET = process.env.MP_TICKET || '38366B56-462A-4B4F-9FEE-18F946D9F1B5';
 const BASE    = 'https://api2.mercadopublico.cl';
 
 // Reintenta ante errores transitorios (504/503/502 o de red). La API de Compra Ágil
 // de ChileCompra es propensa a timeouts esporádicos; sin esto, una sola palabra clave
 // lenta hacía fallar esa búsqueda aunque un segundo intento normalmente sí responde.
-async function fetchConReintento(url, opciones = {}, intentos = 3, esperaMs = 700) {
+async function fetchConReintento(url, opciones = {}, intentos = 2, esperaMs = 700) {
   let ultimoError;
   for (let i = 0; i < intentos; i++) {
     try {
