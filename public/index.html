@@ -893,26 +893,49 @@ async function buscarTodo(soloIdx) {
   // Se consultan varias palabras clave en paralelo (3 a la vez: la API de ChileCompra se
   // satura con más). Si las primeras 12 consultas fallan todas, se corta el barrido en vez
   // de esperar minutos a que fallen una por una.
+  const MAX_PAGINAS = 5;      // tope de páginas (50 resultados c/u) por palabra
+  const parciales = [];       // palabras en las que alguna página extra no respondió
   const porPalabra = await pLimitAll(allWords, 3, async (kw) => {
     const encontrados = [];
     if (miId !== barridoId) return encontrados;                 // búsqueda reemplazada por otra
     if (ok === 0 && fallos >= 12) { done++; return encontrados; } // API caída: se omite el resto
-    try {
-      const qs = new URLSearchParams({ q: kw, estado, tamano: '50' });
+
+    const kwLower = kw.toLowerCase();
+    const coincide = (item) => {
+      const titulo = (item.nombre || '').toLowerCase();
+      return kwLower.split(' ').every(word => {
+        if (word.length <= 2) return new RegExp('\\b' + word + '\\b', 'i').test(titulo);
+        return titulo.includes(word);
+      });
+    };
+    const pedirPagina = async (pagina) => {
+      const qs = new URLSearchParams({ q: kw, estado, tamano: '50', pagina: String(pagina) });
       if (region) qs.set('region', region);
-      const res  = await fetch(`/api/buscar?${qs.toString()}`);
-      const data = await res.json();
+      const res = await fetch(`/api/buscar?${qs.toString()}`);
+      return res.json();
+    };
+
+    try {
+      const data = await pedirPagina(1);
       if (data?.payload?.items) {
         ok++;
-        data.payload.items.forEach(item => {
-          const titulo  = (item.nombre || '').toLowerCase();
-          const kwLower = kw.toLowerCase();
-          const match   = kwLower.split(' ').every(word => {
-            if (word.length <= 2) return new RegExp('\\b' + word + '\\b', 'i').test(titulo);
-            return titulo.includes(word);
+        data.payload.items.forEach(item => { if (coincide(item)) encontrados.push({ ...item, _kw: kw }); });
+
+        // La API trae solo 50 por página (los más nuevos primero) y busca de forma suelta, así
+        // que una licitación abierta puede quedar en la página 2 o 3. Se leen las páginas
+        // restantes (en paralelo, hasta MAX_PAGINAS) solo cuando hay más de una.
+        const totalPag = Math.min(data.payload.paginacion?.total_paginas || 1, MAX_PAGINAS);
+        if (totalPag > 1) {
+          const extra = await Promise.all(
+            Array.from({ length: totalPag - 1 }, (_, i) => pedirPagina(i + 2).catch(() => null))
+          );
+          let falloExtra = false;
+          extra.forEach(d => {
+            if (d?.payload?.items) d.payload.items.forEach(item => { if (coincide(item)) encontrados.push({ ...item, _kw: kw }); });
+            else falloExtra = true;
           });
-          if (match) encontrados.push({ ...item, _kw: kw });
-        });
+          if (falloExtra) parciales.push(kw);
+        }
       } else if (data?.error) {
         fallos++;
         errors.push(`${kw}: ${data.error}`);
@@ -967,8 +990,11 @@ async function buscarTodo(soloIdx) {
   if (fallaTotal) {
     // Había resultados previos: se muestran, pero se avisa que esta búsqueda falló
     el.insertAdjacentHTML('afterbegin', `<div class="err-box"><i class="ti ti-alert-circle" style="font-size:14px"></i> ${msgFalla}</div>`);
-  } else if (fallos > 0) {
-    el.insertAdjacentHTML('afterbegin', `<div class="err-box"><i class="ti ti-alert-circle" style="font-size:14px"></i> ${fallos} de ${allWords.length} palabras no respondieron a tiempo; puede que falten resultados. Puedes reintentar con el botón de buscar de la categoría.</div>`);
+  } else if (fallos > 0 || parciales.length) {
+    const partes = [];
+    if (fallos > 0) partes.push(`${fallos} de ${allWords.length} palabras no respondieron a tiempo`);
+    if (parciales.length) partes.push(`en ${parciales.length} palabra${parciales.length !== 1 ? 's' : ''} faltaron páginas de resultados (${parciales.slice(0, 3).join(', ')}${parciales.length > 3 ? '…' : ''})`);
+    el.insertAdjacentHTML('afterbegin', `<div class="err-box"><i class="ti ti-alert-circle" style="font-size:14px"></i> ${partes.join('; ')}; puede que falten resultados. Puedes reintentar con el botón de buscar de la categoría.</div>`);
   }
 }
 
